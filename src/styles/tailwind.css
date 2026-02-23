@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+}
