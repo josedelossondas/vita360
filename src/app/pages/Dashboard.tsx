@@ -49,12 +49,6 @@ const mapUrgencyToLabel = (urgency: number): string => {
   return 'Media';
 };
 
-const mapUrgencyToColor = (urgency: number): string => {
-  if (urgency >= 80) return 'bg-[#DA4F44]';
-  if (urgency >= 60) return 'bg-[#F2B23A]';
-  return 'bg-[#F2A23A]';
-};
-
 const mapStatusToColor = (status: string): string => {
   switch (status?.toLowerCase()) {
     case 'resuelto':
