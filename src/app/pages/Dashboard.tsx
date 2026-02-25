@@ -219,8 +219,8 @@ export default function Dashboard() {
   const mapInstance = useRef<any>(null);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (token) fetchData();
+  }, [token]);
 
   const fetchData = async () => {
     try {

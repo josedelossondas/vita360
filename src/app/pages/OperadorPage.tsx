@@ -76,6 +76,7 @@ export default function OperadorPage() {
   const [expandedEvidences, setExpandedEvidences] = useState<number | null>(null);
 
   const fetchTickets = async () => {
+    if (!token) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/tickets`, {
@@ -87,7 +88,7 @@ export default function OperadorPage() {
     }
   };
 
-  useEffect(() => { fetchTickets(); }, []);
+  useEffect(() => { if (token) fetchTickets(); }, [token]);
 
   const areas = Array.from(new Set(tickets.map(t => t.area_name).filter(Boolean)));
 
@@ -98,7 +99,7 @@ export default function OperadorPage() {
   });
 
   const handleAssign = async () => {
-    if (!selectedTicket || !assignTeam) return;
+    if (!token || !selectedTicket || !assignTeam) return;
     setAssigning(true);
     try {
       const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/assign`, {
@@ -118,7 +119,7 @@ export default function OperadorPage() {
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
-    if (!selectedTicket) return;
+    if (!token || !selectedTicket) return;
     setUpdatingStatus(true);
     try {
       const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/status`, {

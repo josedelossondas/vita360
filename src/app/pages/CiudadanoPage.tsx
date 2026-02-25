@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth, API_URL } from '../../context/AuthContext';
-import { PlusCircle, RefreshCw, Upload, Image as ImageIcon, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { PlusCircle, RefreshCw, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 
 interface Evidence {
   image_url: string;
@@ -59,12 +59,12 @@ export default function CiudadanoPage() {
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [evidenceImage, setEvidenceImage] = useState<string>('');
-  const [evidenceDesc, setEvidenceDesc] = useState('');
-  const [evidenceLoading, setEvidenceLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const fetchTickets = async () => {
+    if (!token) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/my-tickets`, {
@@ -76,9 +76,13 @@ export default function CiudadanoPage() {
     }
   };
 
-  useEffect(() => { fetchTickets(); }, []);
+  useEffect(() => { if (token) fetchTickets(); }, [token]);
 
   const handleSubmit = async () => {
+    if (!token) {
+      alert('Sesión no lista aún. Intenta nuevamente.');
+      return;
+    }
     if (!title.trim() || !description.trim()) {
       alert('Por favor completa título y descripción');
       return;
@@ -88,7 +92,7 @@ export default function CiudadanoPage() {
       const res = await fetch(`${API_URL}/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({ title, description, image_url: photoDataUrl || null }),
       });
       
       const data = await res.json();
@@ -97,6 +101,7 @@ export default function CiudadanoPage() {
         setSuccessMsg(`Ticket #${data.ticket_id} enviado · Área: ${data.area} · Prioridad: ${data.priority}`);
         setTitle('');
         setDescription('');
+        setPhotoDataUrl('');
         setShowForm(false);
         fetchTickets();
         // Limpiar mensaje después de 5 segundos
@@ -113,48 +118,16 @@ export default function CiudadanoPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setEvidenceImage(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const handleAddEvidence = async () => {
-    if (!selectedTicket || !evidenceImage) {
-      alert('Selecciona una foto');
+    if (!file.type.startsWith('image/')) {
+      alert('Solo imágenes');
       return;
     }
-    setEvidenceLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/evidence`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ image_url: evidenceImage, description: evidenceDesc }),
-      });
-      
-      const data = await res.json();
-      
-      if (res.ok) {
-        setEvidenceImage('');
-        setEvidenceDesc('');
-        fetchTickets();
-        // Refresh selected ticket
-        const updatedTickets = await (await fetch(`${API_URL}/my-tickets`, { headers: { Authorization: `Bearer ${token}` } })).json();
-        const updated = updatedTickets.find((t: Ticket) => t.id === selectedTicket.id);
-        if (updated) setSelectedTicket(updated);
-        alert('Foto agregada correctamente');
-      } else {
-        alert(`Error: ${data.detail || data.message || 'Error al agregar foto'}`);
-        console.error('Error response:', data);
-      }
-    } catch (error) {
-      console.error('Error adding evidence:', error);
-      alert('Error de conexión. Intenta de nuevo.');
-    } finally {
-      setEvidenceLoading(false);
-    }
+    const reader = new FileReader();
+    reader.onload = () => setPhotoDataUrl(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const stepFlow = ['Recibido', 'Asignado', 'En Gestión', 'Resuelto'];
@@ -209,6 +182,61 @@ export default function CiudadanoPage() {
               <p className="text-[11px] text-muted-foreground mt-1">
                 💡 El sistema clasificará automáticamente su solicitud según las palabras clave del problema
               </p>
+            </div>
+
+            {/* Foto (máx 1) */}
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">Foto (opcional, máx 1)</label>
+              <div className="flex gap-2 items-center flex-wrap">
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handlePhotoPick}
+                />
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoPick}
+                />
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="px-3 py-2 border border-border rounded-lg text-[13px] text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  Cámara
+                </button>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="px-3 py-2 border border-border rounded-lg text-[13px] text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  Galería
+                </button>
+                {photoDataUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setPhotoDataUrl('')}
+                    className="px-3 py-2 border border-border rounded-lg text-[13px] text-muted-foreground hover:bg-secondary transition-colors"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+              {photoDataUrl && (
+                <div className="mt-3">
+                  <img
+                    src={photoDataUrl}
+                    alt="Foto adjunta"
+                    className="w-full max-w-[360px] rounded-lg border border-border"
+                  />
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-1">Se guarda en el ticket como evidencia (máx 1).</p>
             </div>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-[13px] text-muted-foreground hover:bg-secondary transition-colors">
@@ -338,57 +366,31 @@ export default function CiudadanoPage() {
                 )}
               </div>
 
-              {/* Agregar foto/evidencia */}
+              {/* Foto (máx 1) */}
               <div>
-                <div className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-2.5">Agregar foto / evidencia</div>
-                <div className="space-y-2.5">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <button onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-border rounded-lg text-[13px] text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                    <ImageIcon className="w-4 h-4" />
-                    {evidenceImage ? 'Cambiar foto' : 'Seleccionar foto'}
-                  </button>
-                  {evidenceImage && (
-                    <img src={evidenceImage} alt="Preview" className="w-full rounded-lg object-cover max-h-40" />
-                  )}
-                  <input type="text" value={evidenceDesc} onChange={e => setEvidenceDesc(e.target.value)}
-                    placeholder="Descripción de la foto (opcional)"
-                    className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary" />
-                  <button onClick={handleAddEvidence} disabled={!evidenceImage || evidenceLoading}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors disabled:opacity-60">
-                    <Upload className="w-4 h-4" />
-                    {evidenceLoading ? 'Subiendo...' : 'Subir evidencia'}
-                  </button>
-                </div>
-
-                {/* Fotos existentes */}
-                {selectedTicket.evidences?.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <div className="text-[11.5px] text-muted-foreground font-medium">Evidencias subidas ({selectedTicket.evidences.length})</div>
-                    {selectedTicket.evidences.map((ev, i) => (
-                      <div key={i} className="border border-border rounded-lg overflow-hidden">
-                        {ev.image_url && (
-                          <img src={ev.image_url} alt={`Evidencia ${i + 1}`} className="w-full object-cover max-h-32" />
-                        )}
-                        {ev.description && (
-                          <div className="px-3 py-2 text-[12px] text-muted-foreground">{ev.description}</div>
-                        )}
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-2.5">Foto adjunta</div>
+                {selectedTicket.evidences?.[0]?.image_url ? (
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <img
+                      src={selectedTicket.evidences[0].image_url}
+                      alt="Evidencia"
+                      className="w-full object-cover max-h-56"
+                    />
+                    {selectedTicket.evidences[0].description && (
+                      <div className="px-3 py-2 text-[12px] text-muted-foreground">
+                        {selectedTicket.evidences[0].description}
                       </div>
-                    ))}
+                    )}
                   </div>
+                ) : (
+                  <div className="text-[13px] text-muted-foreground">Sin foto</div>
                 )}
               </div>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
               <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-              <p className="text-[13px] text-muted-foreground">Selecciona una solicitud para ver detalles y agregar fotos</p>
+              <p className="text-[13px] text-muted-foreground">Selecciona una solicitud para ver detalles</p>
             </div>
           )}
         </div>

@@ -25,11 +25,8 @@ export interface Evidence {
 export interface CreateTicketPayload {
   title: string;
   description: string;
-  priority_score: number;
-  urgency_level: string;
-  area_name: string;
-  latitude?: number;
-  longitude?: number;
+  // Foto (máx 1) integrada a la solicitud. URL o DataURL (base64)
+  image_url?: string | null;
 }
 
 export interface DashboardStats {
@@ -124,7 +121,7 @@ export const apiTickets = {
 
   // Obtener todos los tickets del usuario actual
   getMyTickets: async () => {
-    const response = await fetch(`${API_BASE_URL}/tickets/my-tickets`, {
+    const response = await fetch(`${API_BASE_URL}/my-tickets`, {
       headers: getHeaders(true),
     });
 
