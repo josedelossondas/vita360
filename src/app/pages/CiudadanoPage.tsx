@@ -79,7 +79,10 @@ export default function CiudadanoPage() {
   useEffect(() => { fetchTickets(); }, []);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !description.trim()) return;
+    if (!title.trim() || !description.trim()) {
+      alert('Por favor completa título y descripción');
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/tickets`, {
@@ -87,14 +90,24 @@ export default function CiudadanoPage() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ title, description }),
       });
+      
+      const data = await res.json();
+      
       if (res.ok) {
-        const data = await res.json();
         setSuccessMsg(`Ticket #${data.ticket_id} enviado · Área: ${data.area} · Prioridad: ${data.priority}`);
         setTitle('');
         setDescription('');
         setShowForm(false);
         fetchTickets();
+        // Limpiar mensaje después de 5 segundos
+        setTimeout(() => setSuccessMsg(''), 5000);
+      } else {
+        alert(`Error: ${data.detail || data.message || 'Error al enviar ticket'}`);
+        console.error('Error response:', data);
       }
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
+      alert('Error de conexión. Intenta de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +122,10 @@ export default function CiudadanoPage() {
   };
 
   const handleAddEvidence = async () => {
-    if (!selectedTicket || !evidenceImage) return;
+    if (!selectedTicket || !evidenceImage) {
+      alert('Selecciona una foto');
+      return;
+    }
     setEvidenceLoading(true);
     try {
       const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/evidence`, {
@@ -117,6 +133,9 @@ export default function CiudadanoPage() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ image_url: evidenceImage, description: evidenceDesc }),
       });
+      
+      const data = await res.json();
+      
       if (res.ok) {
         setEvidenceImage('');
         setEvidenceDesc('');
@@ -125,7 +144,14 @@ export default function CiudadanoPage() {
         const updatedTickets = await (await fetch(`${API_URL}/my-tickets`, { headers: { Authorization: `Bearer ${token}` } })).json();
         const updated = updatedTickets.find((t: Ticket) => t.id === selectedTicket.id);
         if (updated) setSelectedTicket(updated);
+        alert('Foto agregada correctamente');
+      } else {
+        alert(`Error: ${data.detail || data.message || 'Error al agregar foto'}`);
+        console.error('Error response:', data);
       }
+    } catch (error) {
+      console.error('Error adding evidence:', error);
+      alert('Error de conexión. Intenta de nuevo.');
     } finally {
       setEvidenceLoading(false);
     }

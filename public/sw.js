@@ -36,27 +36,42 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Para APIs, usar Network First
+  // Para APIs, usar Network First pero NO cachear mutaciones (POST, PUT, PATCH, DELETE)
   if (url.pathname.startsWith('/api') || url.origin !== location.origin) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Guardar en caché si es exitoso
-          if (response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
+    // Si es GET, cachear respuesta
+    if (request.method === 'GET') {
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            // Guardar en caché si es exitoso
+            if (response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseToCache);
+              });
+            }
+            return response;
+          })
+          .catch(() => {
+            // Si falla la red, intentar caché
+            return caches.match(request).then((response) => {
+              return response || new Response('Offline', { status: 503 });
             });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Si falla la red, intentar caché
-          return caches.match(request).then((response) => {
-            return response || new Response('Offline', { status: 503 });
-          });
-        })
-    );
+          })
+      );
+    } else {
+      // Para POST, PUT, PATCH, DELETE: Network First pero NO cachear
+      event.respondWith(
+        fetch(request)
+          .then((response) => response)
+          .catch(() => {
+            return new Response(
+              JSON.stringify({ error: 'Sin conexión. Intenta más tarde.' }),
+              { status: 503, headers: { 'Content-Type': 'application/json' } }
+            );
+          })
+      );
+    }
     return;
   }
 
@@ -66,7 +81,7 @@ self.addEventListener('fetch', (event) => {
       return (
         response ||
         fetch(request).then((response) => {
-          // Guardar en caché
+          // Guardar en caché si es exitoso
           if (response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
