@@ -19,6 +19,12 @@ export function CiudadanoLayout() {
       setIsInstallable(true);
     };
     window.addEventListener('beforeinstallprompt', handler);
+    
+    // Verificar si ya está instalada
+    if (window.navigator.standalone === true) {
+      setIsInstallable(false);
+    }
+    
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
@@ -59,10 +65,24 @@ export function CiudadanoLayout() {
           {isInstallable && (
             <button
               onClick={installPWA}
-              className="px-3 py-1.5 bg-[#306CBB] text-white text-[12px] rounded-lg font-medium hover:bg-[#2555a0]"
+              className="px-3 py-1.5 bg-[#306CBB] text-white text-[12px] rounded-lg font-medium hover:bg-[#2555a0] transition-colors animate-pulse"
+              title="Instalar aplicación en tu dispositivo"
             >
-              Instalar
+              📱 Instalar
             </button>
+          )}
+          {!isInstallable && (
+            <div className="group relative">
+              <button 
+                className="px-3 py-1.5 bg-[#E8F0FE] text-[#306CBB] text-[12px] rounded-lg font-medium"
+                title="PWA instalada o no disponible"
+              >
+                ✓ Instalada
+              </button>
+              <div className="hidden group-hover:block absolute top-full right-0 mt-2 p-2 bg-gray-800 text-white text-[11px] rounded whitespace-nowrap z-50">
+                Usa el menú del navegador para más opciones
+              </div>
+            </div>
           )}
           <button className="relative p-2 hover:bg-[#f0f0f0] rounded-lg">
             <Bell size={20} className="text-[#6D7783]" />

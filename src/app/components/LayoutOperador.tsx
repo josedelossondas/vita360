@@ -1,25 +1,26 @@
 import { Outlet, Link, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LayoutDashboard, FolderOpen, Map, ClipboardList,
-  Clock, BarChart3, BookOpen, Settings, LogOut, Users
+  LayoutDashboard, LogOut, ChevronDown
 } from 'lucide-react';
+import { useState } from 'react';
 
 const menuItems = [
-  { path: '/operador', label: 'Gestión Tickets', icon: Users, exact: true },
+  { path: '/operador', label: 'Gestión Tickets', icon: LayoutDashboard, exact: true },
   { path: '/operador/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/operador/casos', label: 'Casos', icon: FolderOpen },
-  { path: '/operador/mapa', label: 'Mapa Urbano', icon: Map },
-  { path: '/operador/ordenes', label: 'Órdenes', icon: ClipboardList },
-  { path: '/operador/sla', label: 'SLA', icon: Clock },
-  { path: '/operador/analytics', label: 'Analytics', icon: BarChart3 },
-  { path: '/operador/conocimiento', label: 'Conocimiento', icon: BookOpen },
-  { path: '/operador/configuracion', label: 'Configuración', icon: Settings },
 ];
 
 export function LayoutOperador() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-background">

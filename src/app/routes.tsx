@@ -5,14 +5,6 @@ import LoginPage from './pages/LoginPage';
 import CiudadanoPage from './pages/CiudadanoPage';
 import OperadorPage from './pages/OperadorPage';
 import Dashboard from './pages/Dashboard';
-import CasosPage from './pages/CasosPage';
-import CaseDetail from './pages/CaseDetail';
-import MapaUrbano from './pages/MapaUrbano';
-import OrdenesTrabajoPage from './pages/OrdenesTrabajoPage';
-import SLAPage from './pages/SLAPage';
-import AnalyticsPage from './pages/AnalyticsPage';
-import ConocimientoPage from './pages/ConocimientoPage';
-import ConfiguracionPage from './pages/ConfiguracionPage';
 import { useAuth } from '../context/AuthContext';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -49,14 +41,6 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: OperadorPage },
       { path: "dashboard", Component: Dashboard },
-      { path: "casos", Component: CasosPage },
-      { path: "casos/:id", Component: CaseDetail },
-      { path: "mapa", Component: MapaUrbano },
-      { path: "ordenes", Component: OrdenesTrabajoPage },
-      { path: "sla", Component: SLAPage },
-      { path: "analytics", Component: AnalyticsPage },
-      { path: "conocimiento", Component: ConocimientoPage },
-      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
