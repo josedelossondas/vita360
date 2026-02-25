@@ -133,8 +133,8 @@ export function Sidebar() {
         </div>
         <div>
           <div className="text-[20px] font-semibold">
-            <span className="text-[#2F3A46]">Atención</span>
-            <span className="text-[#306CBB]"> 360</span>
+            <span className="text-[#2F3A46]">Vita</span>
+            <span className="text-[#306CBB]">360</span>
           </div>
         </div>
       </div>

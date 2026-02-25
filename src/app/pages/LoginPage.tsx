@@ -166,11 +166,6 @@ export default function LoginPage() {
             >
               {loading ? 'Cargando...' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}
             </button>
-
-            {/* Info del backend conectado */}
-            <p className="text-[10.5px] text-muted-foreground text-center">
-              Backend: <span className="font-mono">{API_URL}</span>
-            </p>
           </div>
         </div>
       </div>

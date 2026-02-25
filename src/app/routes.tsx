@@ -19,7 +19,7 @@ function RoleRouter() {
   const { user, isLoading } = useAuth();
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground text-[13px]">Cargando...</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'ciudadano') return <Navigate to="/ciudadano/reportar" replace />;
+  if (user.role === 'ciudadano') return <Navigate to="/ciudadano" replace />;
   if (user.role === 'operador') return <Navigate to="/operador" replace />;
   return <Navigate to="/login" replace />;
 }
