@@ -29,6 +29,15 @@ export interface CreateTicketPayload {
   image_url?: string | null;
 }
 
+// Respuesta real del backend al crear ticket (ver main.py)
+export interface CreateTicketResponse {
+  ticket_id: number;
+  area: string;
+  priority: string;
+  planned_date: string;
+  evidence_id: number | null;
+}
+
 export interface DashboardStats {
   total_open: number;
   resolved_first_contact_percentage: number;
@@ -104,7 +113,7 @@ export const apiAuth = {
 
 export const apiTickets = {
   // Crear nuevo ticket (ciudadano reporta un problema)
-  create: async (payload: CreateTicketPayload) => {
+  create: async (payload: CreateTicketPayload & Record<string, any>): Promise<CreateTicketResponse> => {
     const response = await fetch(`${API_BASE_URL}/tickets`, {
       method: 'POST',
       headers: getHeaders(true),

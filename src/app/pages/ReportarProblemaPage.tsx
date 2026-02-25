@@ -74,20 +74,19 @@ export default function ReportarProblemaPage() {
 
     try {
       // Crear ticket
-      const ticket = await apiTickets.create({
+      const created = await apiTickets.create({
         title,
         description,
-        area_name: areaName,
-        urgency_level: urgencyLevel,
-        priority_score: urgencyLevel === 'critica' ? 80 : urgencyLevel === 'alta' ? 60 : 40,
-        latitude: geolocation?.latitude,
-        longitude: geolocation?.longitude,
+        // El backend calcula área, prioridad y urgencia en base a la descripción.
+        // Solo mandamos título, descripción e imagen principal (si existiera).
       });
+
+      const ticketId = created.ticket_id;
 
       // Subir fotos
       for (const photo of photos) {
         const base64 = photo.preview;
-        await apiEvidence.upload(ticket.id, base64, `Foto del problema: ${title}`);
+        await apiEvidence.upload(ticketId, base64, `Foto del problema: ${title}`);
       }
 
       setSuccess(true);
