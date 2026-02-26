@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Layers, AlertTriangle, TrendingUp } from 'lucide-react';
 import { mockCases, mockAlerts, mockLayers, type MapLayer } from '../data/mockData';
-import { useFleetStream, type FleetVehicle } from '../../../hooks/useFleetStream';
+import { useFleetStream, type FleetVehicle } from '../../hooks/useFleetStream';
 
 declare global {
   interface Window { L: any; }

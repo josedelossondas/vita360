@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAuth, API_URL } from '../../context/AuthContext';
+import { useFleetStream, type FleetVehicle } from '../../hooks/useFleetStream';
 
 // Tipos de iconos por tipo de caso
 const caseTypeIcons: Record<string, any> = {
@@ -127,6 +128,39 @@ function mapUrgencyToColor(urgency: string): string {
   }
 }
 
+// ── divIcon helpers ────────────────────────────────────────────────────────
+function makePatrolIcon(L: any) {
+  return L.divIcon({
+    html: `<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:#FBBF24;border:2.5px solid #1E40AF;
+      display:flex;align-items:center;justify-content:center;
+      color:#1E40AF;font-weight:700;font-size:12px;font-family:sans-serif;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+    ">P</div>`,
+    className: '',
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
+  });
+}
+
+function makeSuspectIcon(L: any) {
+  return L.divIcon({
+    html: `<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:#EF4444;border:2.5px solid #991B1B;
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:12px;font-family:sans-serif;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+    ">S</div>`,
+    className: '',
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
+  });
+}
+
 // Componente Mapa Integrado
 function MapComponentInline({
   tickets,
@@ -134,20 +168,28 @@ function MapComponentInline({
   setSelectedStatuses,
   selectedAreas,
   setSelectedAreas,
+  fleetVehicles,
 }: {
   tickets: Ticket[];
   selectedStatuses: string[];
   setSelectedStatuses: (fn: (prev: string[]) => string[]) => void;
   selectedAreas: string[];
   setSelectedAreas: (fn: (prev: string[]) => string[]) => void;
+  fleetVehicles: FleetVehicle[];
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const leafletReady = useRef(false);
   const [currentTime, setCurrentTime] = useState<string>(
     new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
   );
   const [statusOpen, setStatusOpen] = useState(false);
   const [areaOpen, setAreaOpen] = useState(false);
+
+  // Fleet marker refs
+  const fleetMarkers = useRef<Map<string, any>>(new Map());
+  const suspectTrail = useRef<[number, number][]>([]);
+  const suspectPolyline = useRef<any>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -155,6 +197,71 @@ function MapComponentInline({
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // ── Update fleet markers whenever fleetVehicles changes ──────────────────
+  useEffect(() => {
+    if (!leafletReady.current) return;
+    const L = window.L;
+    const map = mapInstance.current;
+    if (!L || !map) return;
+
+    const seenIds = new Set<string>();
+
+    for (const v of fleetVehicles) {
+      seenIds.add(v.id);
+
+      const popupHtml = `
+        <div style="font-family:system-ui,sans-serif;min-width:170px;padding:4px 0">
+          <div style="font-size:13px;font-weight:600;color:#1A2332;margin-bottom:4px">${v.id}</div>
+          <div style="font-size:12px;color:#4B5563;margin-bottom:2px">Estado: <b>${v.status}</b></div>
+          <div style="font-size:12px;color:#4B5563;margin-bottom:2px">Velocidad: ${v.speed_kmh} km/h</div>
+          <div style="font-size:12px;color:#4B5563">Área: ${v.area}</div>
+        </div>`;
+
+      if (fleetMarkers.current.has(v.id)) {
+        const marker = fleetMarkers.current.get(v.id);
+        marker.setLatLng([v.lat, v.lng]);
+        marker.getPopup()?.setContent(popupHtml);
+      } else {
+        const icon = v.type === 'suspect' ? makeSuspectIcon(L) : makePatrolIcon(L);
+        const marker = L.marker([v.lat, v.lng], { icon })
+          .bindPopup(popupHtml)
+          .addTo(map);
+        fleetMarkers.current.set(v.id, marker);
+      }
+
+      // Suspect trail polyline
+      if (v.type === 'suspect') {
+        suspectTrail.current.push([v.lat, v.lng]);
+        if (suspectTrail.current.length > 40) suspectTrail.current.shift();
+        if (suspectPolyline.current) {
+          suspectPolyline.current.setLatLngs(suspectTrail.current);
+        } else {
+          suspectPolyline.current = L.polyline(suspectTrail.current, {
+            color: '#EF4444',
+            weight: 2,
+            opacity: 0.45,
+            dashArray: '4 4',
+          }).addTo(map);
+        }
+      }
+    }
+
+    // Remove markers for vehicles no longer visible
+    for (const [id, marker] of fleetMarkers.current) {
+      if (!seenIds.has(id)) {
+        map.removeLayer(marker);
+        fleetMarkers.current.delete(id);
+        if (id.startsWith('S')) {
+          suspectTrail.current = [];
+          if (suspectPolyline.current) {
+            map.removeLayer(suspectPolyline.current);
+            suspectPolyline.current = null;
+          }
+        }
+      }
+    }
+  }, [fleetVehicles]);
 
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
@@ -172,6 +279,7 @@ function MapComponentInline({
       // Centro de ejemplo: comuna de Vitacura
       const map = L.map(mapRef.current).setView([-33.383, -70.58], 14);
       mapInstance.current = map;
+      leafletReady.current = true;
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CARTO',
@@ -228,6 +336,10 @@ function MapComponentInline({
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
+        leafletReady.current = false;
+        fleetMarkers.current.clear();
+        suspectTrail.current = [];
+        suspectPolyline.current = null;
       }
     };
   }, [tickets]);
@@ -330,6 +442,8 @@ type SortColumn = 'priority' | 'date' | 'status' | 'area' | 'id' | 'title';
 
 export default function Dashboard() {
   const { token } = useAuth();
+  const fleetTick = useFleetStream();
+  const fleetVehicles = fleetTick?.vehicles ?? [];
   const [sortColumn, setSortColumn] = useState<SortColumn>('priority');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -501,6 +615,7 @@ export default function Dashboard() {
         setSelectedStatuses={setSelectedStatuses}
         selectedAreas={selectedAreas}
         setSelectedAreas={setSelectedAreas}
+        fleetVehicles={fleetVehicles}
       />
 
       {/* Main Content - Two Columns */}
