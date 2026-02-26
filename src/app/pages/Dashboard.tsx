@@ -322,7 +322,7 @@ export default function Dashboard() {
       }
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }).slice(0, 5); // Mostrar solo los 5 primeros
-  }, [sortBy, filterStatus, tickets]);
+  }, [sortBy, selectedStatuses, selectedAreas, tickets]);
 
   if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Cargando dashboard...</div>;
@@ -527,19 +527,7 @@ export default function Dashboard() {
 
               <div className="h-px bg-[#EEF1F4]" />
 
-              <div>
-                <label className="block text-[13px] font-semibold text-[#2F3A46] mb-2">
-                  Tasa de Resolución
-                </label>
-                <div className="bg-[#F3F5F7] border border-[#E6EAF0] rounded-md p-3">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[28px] font-bold text-[#48946F]">
-                      {Math.round(stats?.resolution_rate || 0)}%
-                    </span>
-                    <span className="text-[12px] text-[#6D7783]">resueltos</span>
-                  </div>
-                </div>
-              </div>
+              {/* Sección de tasa de resolución retirada para evitar redundancia */}
             </div>
           </div>
         </div>
