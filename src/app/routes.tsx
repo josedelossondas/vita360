@@ -5,7 +5,7 @@ import LoginPage from './pages/LoginPage';
 import CiudadanoPage from './pages/CiudadanoPage';
 import OperadorPage from './pages/OperadorPage';
 import Dashboard from './pages/Dashboard';
-import DashboardDev from './pages/DashboardDev';
+import ApiMonitorPage from './pages/ApiMonitorPage';
 import ReportarProblemaPage from './pages/ReportarProblemaPage';
 import { useAuth } from '../context/AuthContext';
 
@@ -40,26 +40,10 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Dashboard },
       { path: "tickets", Component: OperadorPage },
+      { path: "api", Component: ApiMonitorPage },
     ],
   },
-  {
-    // Preview con flota — misma auth/layout, solo visible si sabes la URL
-    path: "/operador.dev",
-    element: <RequireAuth><LayoutOperador /></RequireAuth>,
-    children: [
-      { index: true, Component: DashboardDev },
-    ],
-  },
-  {
-    path: "/login",
-    Component: LoginPage,
-  },
-  {
-    path: "/app",
-    Component: RoleRouter,
-  },
-  {
-    path: "/",
-    Component: LoginPage,
-  },
+  { path: "/login", Component: LoginPage },
+  { path: "/app", Component: RoleRouter },
+  { path: "/", Component: LoginPage },
 ]);
