@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import CiudadanoPage from './pages/CiudadanoPage';
 import OperadorPage from './pages/OperadorPage';
 import Dashboard from './pages/Dashboard';
+import DashboardDev from './pages/DashboardDev';
 import ReportarProblemaPage from './pages/ReportarProblemaPage';
 import { useAuth } from '../context/AuthContext';
 
@@ -39,6 +40,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Dashboard },
       { path: "tickets", Component: OperadorPage },
+    ],
+  },
+  {
+    // Preview con flota — misma auth/layout, solo visible si sabes la URL
+    path: "/operador.dev",
+    element: <RequireAuth><LayoutOperador /></RequireAuth>,
+    children: [
+      { index: true, Component: DashboardDev },
     ],
   },
   {
