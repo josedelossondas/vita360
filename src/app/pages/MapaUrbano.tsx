@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Layers, AlertTriangle, TrendingUp } from 'lucide-react';
 import { mockCases, mockAlerts, mockLayers, type MapLayer } from '../data/mockData';
+import { useFleetStream, type FleetVehicle } from '../../../hooks/useFleetStream';
 
 declare global {
   interface Window { L: any; }
@@ -13,12 +14,117 @@ const LAYER_COLORS: Record<string, string> = {
   alumbrado: '#7C3AED',
 };
 
+// ── Helper: create divIcon for patrol/suspect ──────────────────────────────
+function makeVehicleIcon(L: any, type: 'patrol' | 'suspect') {
+  if (type === 'suspect') {
+    return L.divIcon({
+      html: `<div style="
+        width:26px;height:26px;border-radius:50%;
+        background:#EF4444;border:2.5px solid #991B1B;
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:12px;font-family:sans-serif;
+        box-shadow:0 2px 8px rgba(0,0,0,.35);
+      ">S</div>`,
+      className: '',
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -16],
+    });
+  }
+  return L.divIcon({
+    html: `<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:#FBBF24;border:2.5px solid #1E40AF;
+      display:flex;align-items:center;justify-content:center;
+      color:#1E40AF;font-weight:700;font-size:12px;font-family:sans-serif;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+    ">P</div>`,
+    className: '',
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
+  });
+}
+
 export default function MapaUrbano() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const layerGroups = useRef<Record<string, any>>({});
   const [activeLayers, setActiveLayers] = useState<MapLayer[]>(mockLayers);
   const [selectedCase, setSelectedCase] = useState<typeof mockCases[0] | null>(null);
+
+  // ── Fleet stream ────────────────────────────────────────────────────────────
+  const fleetTick = useFleetStream();
+  const fleetMarkers = useRef<Map<string, any>>(new Map());
+  const suspectTrail = useRef<[number, number][]>([]);
+  const suspectPolyline = useRef<any>(null);
+  const leafletReady = useRef(false);
+
+  // ── Update fleet markers on each tick ──────────────────────────────────────
+  useEffect(() => {
+    if (!fleetTick || !leafletReady.current) return;
+    const L = window.L;
+    const map = mapInstance.current;
+    if (!L || !map) return;
+
+    const seenIds = new Set<string>();
+
+    for (const v of fleetTick.vehicles) {
+      seenIds.add(v.id);
+
+      const popupHtml = `
+        <div style="font-family:system-ui,sans-serif;min-width:160px;padding:4px 0">
+          <div style="font-size:13px;font-weight:600;color:#1A2332;margin-bottom:4px">${v.id}</div>
+          <div style="font-size:12px;color:#4B5563;margin-bottom:2px">Estado: <b>${v.status}</b></div>
+          <div style="font-size:12px;color:#4B5563;margin-bottom:2px">Velocidad: ${v.speed_kmh} km/h</div>
+          <div style="font-size:12px;color:#4B5563">Área: ${v.area}</div>
+        </div>`;
+
+      if (fleetMarkers.current.has(v.id)) {
+        const marker = fleetMarkers.current.get(v.id);
+        marker.setLatLng([v.lat, v.lng]);
+        marker.getPopup()?.setContent(popupHtml);
+      } else {
+        const icon = makeVehicleIcon(L, v.type as 'patrol' | 'suspect');
+        const marker = L.marker([v.lat, v.lng], { icon })
+          .bindPopup(popupHtml)
+          .addTo(map);
+        fleetMarkers.current.set(v.id, marker);
+      }
+
+      // Suspect trail
+      if (v.type === 'suspect') {
+        suspectTrail.current.push([v.lat, v.lng]);
+        if (suspectTrail.current.length > 40) suspectTrail.current.shift();
+        if (suspectPolyline.current) {
+          suspectPolyline.current.setLatLngs(suspectTrail.current);
+        } else {
+          suspectPolyline.current = L.polyline(suspectTrail.current, {
+            color: '#EF4444',
+            weight: 2,
+            opacity: 0.45,
+            dashArray: '4 4',
+          }).addTo(map);
+        }
+      }
+    }
+
+    // Remove markers for vehicles no longer in the tick
+    for (const [id, marker] of fleetMarkers.current) {
+      if (!seenIds.has(id)) {
+        mapInstance.current?.removeLayer(marker);
+        fleetMarkers.current.delete(id);
+        // Clear suspect trail if suspect disappears
+        if (id.startsWith('S')) {
+          suspectTrail.current = [];
+          if (suspectPolyline.current) {
+            mapInstance.current?.removeLayer(suspectPolyline.current);
+            suspectPolyline.current = null;
+          }
+        }
+      }
+    }
+  }, [fleetTick]);
 
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
@@ -35,8 +141,7 @@ export default function MapaUrbano() {
       const L = window.L;
       const map = L.map(mapRef.current).setView([-33.449, -70.668], 15);
       mapInstance.current = map;
-
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      leafletReady.current = true;      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 20,
