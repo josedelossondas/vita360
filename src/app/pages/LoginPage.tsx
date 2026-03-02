@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuth, API_URL } from '../../context/AuthContext';
-import { LayoutDashboard } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+// Hero: bosque urbano Vitacura
+const HERO_IMG =
+  'https://vitanew.tchile.com/app/uploads/2023/10/bosque-urbano.jpg';
+// Logo institucional
+const VITACURA_LOGO =
+  'https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png';
 
 export default function LoginPage() {
   const { login, register } = useAuth();
@@ -19,7 +25,6 @@ export default function LoginPage() {
     setError('');
     setSuccess('');
 
-    // Validaciones locales
     if (mode === 'register' && !name.trim()) {
       setError('El nombre es obligatorio');
       return;
@@ -53,28 +58,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-8 justify-center">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary">
-            <LayoutDashboard className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-foreground">Vita360</div>
-            <div className="text-[12px] text-muted-foreground">Gestión Urbana Municipal</div>
-          </div>
+    <div className="min-h-screen flex">
+      {/* ── Panel izquierdo: formulario ── */}
+      <div className="relative flex flex-col justify-center w-full md:w-[480px] lg:w-[520px] shrink-0 bg-background px-8 py-12 z-10">
+        {/* Logo institucional + marca */}
+        <div className="mb-10">
+          <img
+            src={VITACURA_LOGO}
+            alt="Municipalidad de Vitacura"
+            className="h-10 object-contain mb-5"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+          <h1 className="text-2xl font-semibold text-foreground leading-tight">
+            Vita<span className="text-primary">360</span>
+          </h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Plataforma de Gestión Urbana Municipal
+          </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
+        {/* Card glass con el formulario */}
+        <div className="glass rounded-2xl p-6 shadow-lg">
           {/* Tabs */}
           <div className="flex rounded-lg bg-secondary p-1 mb-6">
-            {(['login', 'register'] as const).map(m => (
+            {(['login', 'register'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                className={`flex-1 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
-                  mode === m ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                className={`flex-1 py-1.5 rounded-md text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
+                  mode === m
+                    ? 'bg-white text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {m === 'login' ? 'Iniciar Sesión' : 'Registrarse'}
@@ -85,45 +101,53 @@ export default function LoginPage() {
           <div className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">Nombre completo</label>
+                <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">
+                  Nombre completo
+                </label>
                 <input
                   type="text"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Juan Pérez"
-                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background"
+                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background focus-visible:ring-2 focus-visible:ring-ring/30"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">Email</label>
+              <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="correo@ejemplo.com"
                 className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background"
               />
             </div>
 
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">Contraseña</label>
+              <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">
+                Contraseña
+              </label>
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="mínimo 6 caracteres"
                 className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background"
-                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               />
             </div>
 
             {mode === 'register' && (
               <div>
-                <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">Tipo de cuenta</label>
+                <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">
+                  Tipo de cuenta
+                </label>
                 <div className="flex gap-2">
-                  {(['ciudadano', 'operador'] as const).map(r => (
+                  {(['ciudadano', 'operador'] as const).map((r) => (
                     <button
                       key={r}
                       type="button"
@@ -146,7 +170,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Mensajes de error y éxito */}
             {error && (
               <div className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[12.5px] text-red-700">
                 ⚠️ {error}
@@ -162,10 +185,38 @@ export default function LoginPage() {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-2.5 bg-primary text-white rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
+              className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-ring"
             >
               {loading ? 'Cargando...' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}
             </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="mt-8 text-[11px] text-muted-foreground text-center">
+          Municipalidad de Vitacura · Portal de Atención Digital
+        </p>
+      </div>
+
+      {/* ── Panel derecho: imagen hero (solo desktop) ── */}
+      <div className="hidden md:block flex-1 relative overflow-hidden">
+        <img
+          src={HERO_IMG}
+          alt="Bosque Urbano Vitacura"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Overlay gradiente suave para dar legibilidad */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+        {/* Texto sobre la imagen */}
+        <div className="absolute inset-0 flex flex-col justify-end p-12">
+          <div className="max-w-sm">
+            <h2 className="text-white text-2xl font-semibold leading-tight mb-3">
+              Vitacura, una ciudad que escucha
+            </h2>
+            <p className="text-white/80 text-[14px] leading-relaxed">
+              Reporta problemas, haz seguimiento de tus solicitudes y mantente
+              informado sobre los servicios de tu municipio.
+            </p>
           </div>
         </div>
       </div>

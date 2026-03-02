@@ -1,1 +1,30 @@
 /* Vita360 - estilos adicionales */
+
+@layer utilities {
+  /* Glass card — úsalo en superficies pequeñas (header sticky, cards destacadas) */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Glass suave — topbar, paneles secundarios */
+  .glass-soft {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+  }
+
+  /* Fallback para navegadores sin backdrop-filter */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      background: rgba(255, 255, 255, 0.92);
+    }
+    .glass-soft {
+      background: rgba(255, 255, 255, 0.88);
+    }
+  }
+}

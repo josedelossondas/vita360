@@ -41,6 +41,11 @@
   --sidebar-ring: #1C3A8A;
   --success: #16A34A;
   --warning: #D97706;
+  /* Glass tokens */
+  --glass-bg: rgba(255,255,255,0.65);
+  --glass-border: rgba(255,255,255,0.35);
+  --glass-shadow: 0 10px 30px rgba(16,24,40,0.08);
+  --glass-blur: 16px;
 }
 
 .dark {

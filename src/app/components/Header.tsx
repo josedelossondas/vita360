@@ -1,36 +1,40 @@
 import { Search, Bell, User } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 export function Header() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Iniciales del usuario para el avatar
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'U';
+
   return (
-    <header className="fixed top-0 left-[240px] right-0 h-[72px] bg-white border-b border-[#E6EAF0] flex items-center px-6 gap-8 z-40">
-      {/* Search Bar */}
+    <header className="fixed top-0 left-[240px] right-0 h-[72px] bg-card border-b border-border flex items-center px-6 gap-8 z-40 transition-shadow">
+      {/* Buscador */}
       <div className="flex-1 max-w-[560px]">
         <div className="relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA6B2]" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Buscar por nombre, dirección, trámite..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-[40px] pl-10 pr-4 bg-[#F7F8FA] border border-[#E6EAF0] rounded-md text-[14px] text-[#2F3A46] placeholder:text-[#9AA6B2] focus:outline-none focus:ring-2 focus:ring-[#306CBB]/20"
+            className="w-full h-[38px] pl-9 pr-4 bg-secondary border border-border rounded-lg text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-colors"
           />
         </div>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-4 ml-auto">
-        <div className="relative cursor-pointer">
-          <Bell size={20} className="text-[#6D7783]" />
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#E53935] rounded-full flex items-center justify-center">
-            <span className="text-[10px] font-semibold text-white">1</span>
-          </div>
+      {/* Acciones derechas */}
+      <div className="flex items-center gap-3 ml-auto">
+        <div className="relative cursor-pointer p-2 rounded-lg hover:bg-secondary transition-colors">
+          <Bell size={18} className="text-muted-foreground" />
+          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
         </div>
-        <User size={20} className="text-[#6D7783] cursor-pointer" />
-        <div className="w-9 h-9 bg-[#306CBB]/10 rounded-full flex items-center justify-center border border-[#E6EAF0]">
-          <span className="text-[14px] font-semibold text-[#306CBB]">JD</span>
+        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center border border-border cursor-pointer">
+          <span className="text-[12px] font-semibold text-primary">{initials}</span>
         </div>
       </div>
     </header>

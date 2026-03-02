@@ -6,19 +6,23 @@ import {
   Clock,
   BarChart3,
   BookOpen,
-  Building2,
   ChevronDown,
   Map,
-  User,
   LogOut,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { Avatar, AvatarFallback } from './ui/avatar';
+
+// Logo institucional
+const VITACURA_LOGO =
+  'https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png';
 
 interface MenuItemWithSub {
   path?: string;
   label: string;
   icon: any;
+  section?: string;
   submenu?: Array<{
     path: string;
     label: string;
@@ -31,34 +35,36 @@ const menuItems: MenuItemWithSub[] = [
   {
     label: 'Gestión',
     icon: FolderOpen,
+    section: 'Gestión',
     submenu: [
       { path: '/casos', label: 'Casos', icon: FolderOpen },
       { path: '/mapa', label: 'Mapa Urbano', icon: Map },
       { path: '/tramites', label: 'Trámites', icon: FileText },
-    ]
+    ],
   },
   {
     label: 'Monitoreo',
     icon: Clock,
+    section: 'Monitoreo',
     submenu: [
       { path: '/sla', label: 'SLA', icon: Clock },
       { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-    ]
+    ],
   },
   { path: '/conocimiento', label: 'Base de Conocimiento', icon: BookOpen },
 ];
 
-const NavItem = ({ 
-  icon: Icon, 
-  label, 
+const NavItem = ({
+  icon: Icon,
+  label,
   isActive,
   submenu,
   isOpen,
   onToggle,
-  children
-}: { 
-  icon: any; 
-  label: string; 
+  children,
+}: {
+  icon: any;
+  label: string;
   isActive: boolean;
   submenu?: any[];
   isOpen?: boolean;
@@ -70,31 +76,32 @@ const NavItem = ({
       <div className="w-full">
         <button
           onClick={onToggle}
-          className={`w-full flex items-center gap-3 h-[52px] px-4 cursor-pointer transition-colors relative group ${
-            isOpen 
-              ? 'bg-[#E7E9EE] text-[#306CBB]' 
-              : 'text-[#6F7F8F] hover:bg-[#E7E9EE]/50'
+          className={`w-full flex items-center gap-3 h-[48px] px-4 cursor-pointer transition-colors relative group rounded-none ${
+            isOpen
+              ? 'bg-accent text-primary'
+              : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
           }`}
         >
-          {isOpen && <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#306CBB]" />}
-          <Icon size={20} />
-          <span className="text-[14px] font-medium flex-1 text-left">{label}</span>
-          <ChevronDown 
-            size={16} 
-            className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          {isOpen && (
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary rounded-r-full" />
+          )}
+          <Icon size={18} />
+          <span className="text-[13.5px] font-medium flex-1 text-left">{label}</span>
+          <ChevronDown
+            size={14}
+            className={`transition-transform text-muted-foreground ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
-        
-        {/* Submenu */}
+
         {isOpen && (
-          <div className="bg-[#F8F9FA] border-l-2 border-[#E6EAF0]">
+          <div className="bg-secondary/40 border-l-2 border-border ml-4">
             {submenu.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className="flex items-center gap-3 h-[44px] px-8 text-[#6F7F8F] hover:bg-[#E7E9EE] hover:text-[#306CBB] transition-colors text-[13px] font-medium"
+                className="flex items-center gap-2.5 h-[40px] px-5 text-muted-foreground hover:bg-accent hover:text-primary transition-colors text-[12.5px] font-medium"
               >
-                <item.icon size={16} />
+                <item.icon size={14} />
                 <span>{item.label}</span>
               </Link>
             ))}
@@ -113,10 +120,7 @@ export function Sidebar() {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   const toggleMenu = (label: string) => {
-    setOpenMenus(prev => ({
-      ...prev,
-      [label]: !prev[label]
-    }));
+    setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
   const handleLogout = () => {
@@ -124,26 +128,34 @@ export function Sidebar() {
     window.location.href = '/login';
   };
 
+  // Iniciales para avatar
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'OP';
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[240px] bg-[#F4F5F7] border-r border-[#E6EAF0] flex flex-col z-50">
+    <aside className="fixed left-0 top-0 h-screen w-[240px] bg-sidebar border-r border-sidebar-border flex flex-col z-50">
       {/* Logo */}
-      <div className="h-[72px] flex items-center px-6 border-b border-[#E6EAF0] gap-2">
-        <div className="w-10 h-10 bg-[#306CBB] rounded-lg flex items-center justify-center flex-shrink-0">
-          <Building2 size={24} className="text-white" />
-        </div>
-        <div>
-          <div className="text-[20px] font-semibold">
-            <span className="text-[#2F3A46]">Vita</span>
-            <span className="text-[#306CBB]">360</span>
-          </div>
+      <div className="h-[72px] flex items-center px-5 border-b border-sidebar-border gap-3 shrink-0">
+        <img
+          src={VITACURA_LOGO}
+          alt="Municipalidad de Vitacura"
+          className="h-7 object-contain"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+        <div className="h-4 w-px bg-sidebar-border" />
+        <div className="text-[15px] font-semibold text-sidebar-foreground leading-none">
+          Vita<span className="text-primary">360</span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto">
+      <nav className="flex-1 py-3 overflow-y-auto">
         {menuItems.map((item) => {
           const isOpen = openMenus[item.label];
-          
+
           return (
             <NavItem
               key={item.label}
@@ -157,17 +169,17 @@ export function Sidebar() {
               {!item.submenu && item.path && (
                 <Link
                   to={item.path}
-                  className={`flex items-center gap-3 h-[52px] px-4 cursor-pointer transition-colors relative ${
+                  className={`flex items-center gap-3 h-[48px] px-4 cursor-pointer transition-colors relative ${
                     location.pathname === item.path
-                      ? 'bg-[#E7E9EE] text-[#306CBB]'
-                      : 'text-[#6F7F8F] hover:bg-[#E7E9EE]/50'
+                      ? 'bg-accent text-primary font-semibold'
+                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                   }`}
                 >
                   {location.pathname === item.path && (
-                    <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#306CBB]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary rounded-r-full" />
                   )}
-                  <item.icon size={20} />
-                  <span className="text-[14px] font-medium">{item.label}</span>
+                  <item.icon size={18} />
+                  <span className="text-[13.5px] font-medium">{item.label}</span>
                 </Link>
               )}
             </NavItem>
@@ -175,24 +187,26 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User Section - Footer */}
-      <div className="border-t border-[#E6EAF0] p-4 space-y-2">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-8 h-8 bg-[#306CBB]/10 rounded-full flex items-center justify-center">
-            <User size={16} className="text-[#306CBB]" />
-          </div>
-          <div className="flex-1">
-            <div className="text-[12px] font-semibold text-[#2F3A46]">{user?.name}</div>
-            <div className="text-[11px] text-[#6D7783]">{user?.role}</div>
+      {/* Sección de usuario */}
+      <div className="border-t border-sidebar-border p-3 space-y-1 shrink-0">
+        <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
+          <Avatar className="w-8 h-8">
+            <AvatarFallback className="text-[11px] font-semibold bg-primary/10 text-primary">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="text-[12px] font-semibold text-sidebar-foreground truncate">{user?.name}</div>
+            <div className="text-[11px] text-muted-foreground capitalize">{user?.role}</div>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#6F7F8F] hover:bg-[#E7E9EE] rounded-md transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[12.5px] text-muted-foreground hover:bg-accent hover:text-destructive rounded-lg transition-colors"
         >
-          <LogOut size={16} />
-          <span>Salir</span>
+          <LogOut size={14} />
+          <span>Cerrar sesión</span>
         </button>
       </div>
     </aside>
