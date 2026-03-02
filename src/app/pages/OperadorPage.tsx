@@ -158,7 +158,7 @@ export default function OperadorPage() {
       {/* KPIs */}
       <div className="grid grid-cols-5 gap-3 mb-5">
         {[
-          { label: 'Total', count: tickets.length, color: 'text-foreground', bg: 'bg-white' },
+          { label: 'Total', count: tickets.length, color: 'text-foreground', bg: 'bg-card' },
           { label: 'Recibidos', count: countByStatus('Recibido'), color: 'text-blue-700', bg: 'bg-blue-50' },
           { label: 'Asignados', count: countByStatus('Asignado'), color: 'text-purple-700', bg: 'bg-purple-50' },
           { label: 'En Gestión', count: countByStatus('En Gestión'), color: 'text-amber-700', bg: 'bg-amber-50' },
@@ -173,7 +173,7 @@ export default function OperadorPage() {
 
       <div className="grid grid-cols-[1fr_360px] gap-5">
         {/* Tabla tickets */}
-        <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
           <div className="px-5 py-3.5 border-b border-border flex gap-3 flex-wrap items-center">
             <h2 className="text-[13.5px] font-semibold flex-1">Solicitudes ({filtered.length})</h2>
             <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
@@ -227,7 +227,7 @@ export default function OperadorPage() {
 
         {/* Panel de gestión */}
         {selectedTicket ? (
-          <div className="bg-white rounded-xl border border-border shadow-sm p-5 space-y-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+          <div className="bg-card rounded-xl border border-border shadow-sm p-5 space-y-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto">
             {/* Info básica */}
             <div>
               <div className="flex items-center gap-2 mb-1.5">
@@ -341,7 +341,7 @@ export default function OperadorPage() {
                       {selectedTicket.evidences.map((ev, i) => (
                         <div key={i} className="border border-border rounded-lg overflow-hidden">
                           {ev.image_url && (
-                            <img src={ev.image_url} alt={`Evidencia ${i + 1}`} className="w-full object-cover max-h-40" />
+                            <img src={ev.image_url} alt={`Evidencia ${i + 1}`} className="w-full object-cover max-h-40" loading="lazy" />
                           )}
                           {ev.description && (
                             <div className="px-3 py-2 text-[12px] text-muted-foreground">{ev.description}</div>
@@ -355,7 +355,7 @@ export default function OperadorPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
+          <div className="bg-card rounded-xl border border-border shadow-sm p-8 text-center">
             <AlertTriangle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
             <p className="text-[13px] text-muted-foreground">Selecciona un ticket para gestionar, asignar equipo y actualizar estado</p>
           </div>
