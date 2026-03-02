@@ -19,9 +19,8 @@ import { Activity, Zap, CheckCircle2, Clock, AlertCircle, RefreshCw } from 'luci
 // Config
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 🔑 Pon aquí tu API key o usa variable de entorno VITE_OPENAI_API_KEY
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY ?? '';
-const OPENAI_MODEL = 'gpt-4o-mini';
+// La lógica IA ahora vive 100% en el backend (FastAPI).
+// El frontend sólo llama endpoints REST del backend, sin tocar API keys.
 const POLL_INTERVAL_MS = 4000; // cada 4s chequea tickets nuevos
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,73 +60,65 @@ interface TicketLog {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ChatGPT integration — stubs ready for your query
+// IA vía backend (sin API keys en frontend)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * TODO: reemplaza el cuerpo de esta función con tu query a ChatGPT.
- * Devuelve el nombre del área clasificada.
- * Ejemplo de retorno esperado: "Áreas Verdes"
- */
-async function classifyArea(title: string, description: string): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    // Simulación sin API key — elimina esto cuando tengas la key
-    await new Promise(r => setTimeout(r, 1200));
-    const areas = ['Áreas Verdes', 'Aseo', 'Infraestructura', 'Atención General'];
-    return areas[Math.floor(Math.random() * areas.length)];
+async function classifyAreaViaBackend(
+  title: string,
+  description: string,
+  token: string | null
+): Promise<string> {
+  if (!token) {
+    throw new Error('Token no disponible para llamar IA backend');
   }
 
-  // ── Aquí irá tu query ──────────────────────────────────────────────────────
-  // const response = await fetch('https://api.openai.com/v1/chat/completions', {
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     Authorization: `Bearer ${OPENAI_API_KEY}`,
-  //   },
-  //   body: JSON.stringify({
-  //     model: OPENAI_MODEL,
-  //     max_tokens: 60,
-  //     messages: [
-  //       { role: 'system', content: 'Eres un clasificador de solicitudes municipales...' },
-  //       { role: 'user', content: `Título: ${title}\nDescripción: ${description}\nDevuelve solo el nombre del área.` },
-  //     ],
-  //   }),
-  // });
-  // const data = await response.json();
-  // return data.choices[0].message.content.trim();
-  // ──────────────────────────────────────────────────────────────────────────
+  const response = await fetch(`${API_URL}/ai/tickets/classify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title, description }),
+  });
 
-  throw new Error('Configura VITE_OPENAI_API_KEY y el query de área');
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Error llamando IA de clasificación en backend');
+  }
+
+  const data: any = await response.json();
+  return data?.area ?? 'Atención General';
 }
 
-/**
- * TODO: reemplaza el cuerpo de esta función con tu query a ChatGPT.
- * Devuelve un score de prioridad entre 0 y 100.
- */
-async function calculatePriority(title: string, description: string, area: string): Promise<number> {
-  if (!OPENAI_API_KEY) {
-    await new Promise(r => setTimeout(r, 1000));
-    return Math.floor(Math.random() * 60) + 30;
+async function calculatePriorityViaBackend(
+  title: string,
+  description: string,
+  token: string | null
+): Promise<number> {
+  if (!token) {
+    throw new Error('Token no disponible para llamar IA backend');
   }
 
-  // ── Aquí irá tu query ──────────────────────────────────────────────────────
-  // const response = await fetch('https://api.openai.com/v1/chat/completions', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${OPENAI_API_KEY}` },
-  //   body: JSON.stringify({
-  //     model: OPENAI_MODEL,
-  //     max_tokens: 10,
-  //     messages: [
-  //       { role: 'system', content: 'Devuelve solo un número entre 0 y 100 indicando la prioridad.' },
-  //       { role: 'user', content: `Área: ${area}\nTítulo: ${title}\nDescripción: ${description}` },
-  //     ],
-  //   }),
-  // });
-  // const data = await response.json();
-  // return parseInt(data.choices[0].message.content.trim(), 10);
-  // ──────────────────────────────────────────────────────────────────────────
+  const response = await fetch(`${API_URL}/ai/tickets/priority`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title, description }),
+  });
 
-  throw new Error('Configura VITE_OPENAI_API_KEY y el query de prioridad');
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Error llamando IA de prioridad en backend');
+  }
+
+  const data: any = await response.json();
+  const score = typeof data?.score === 'number' ? data.score : NaN;
+  if (Number.isNaN(score)) {
+    throw new Error('Backend IA devolvió un score inválido');
+  }
+  return score;
 }
 
 function priorityLabel(score: number): string {
@@ -283,14 +274,14 @@ export default function ApiMonitorPage() {
     setLogs(prev => [newLog, ...prev].slice(0, 50)); // keep last 50
 
     try {
-      // Phase 1: classify area
-      const areaName = await classifyArea(ticket.title, ticket.description);
+      // Phase 1: classify area (vía backend)
+      const areaName = await classifyAreaViaBackend(ticket.title, ticket.description, token || null);
       const areaResult: AreaResult = { area: areaName, color: areaColor(areaName) };
 
       setLogs(prev => prev.map(l => l.id === ticket.id ? { ...l, area: areaResult, phase: 'calculating_priority' as ProcessingPhase } : l));
 
-      // Phase 2: calculate priority
-      const score = await calculatePriority(ticket.title, ticket.description, areaName);
+      // Phase 2: calculate priority (vía backend)
+      const score = await calculatePriorityViaBackend(ticket.title, ticket.description, token || null);
       const label = priorityLabel(score);
 
       setLogs(prev => prev.map(l => l.id === ticket.id
@@ -353,7 +344,9 @@ export default function ApiMonitorPage() {
             </div>
             <h1 className="text-[18px] font-semibold text-[#2F3A46]">Monitor de procesamiento IA</h1>
           </div>
-          <p className="text-[13px] text-[#6B7280] ml-10">Tickets entrantes clasificados en tiempo real · powered by {OPENAI_API_KEY ? 'ChatGPT API' : <span className="text-[#F2A23A]">sin API key — modo simulación</span>}</p>
+          <p className="text-[13px] text-[#6B7280] ml-10">
+            Tickets entrantes clasificados en tiempo real · IA ejecutándose en el backend
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setLogs([])}
@@ -382,16 +375,6 @@ export default function ApiMonitorPage() {
           </div>
         ))}
       </div>
-
-      {/* Setup notice if no API key */}
-      {!OPENAI_API_KEY && (
-        <div className="mb-6 px-4 py-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-[12.5px] text-[#92400E] flex items-start gap-3">
-          <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-[#D97706]" />
-          <div>
-            <strong>Modo simulación activo.</strong> Para conectar con ChatGPT API: añade <code className="bg-[#FEF3C7] px-1 rounded font-mono">VITE_OPENAI_API_KEY=sk-…</code> a tu <code className="bg-[#FEF3C7] px-1 rounded font-mono">.env</code>, implementa los queries en <code className="bg-[#FEF3C7] px-1 rounded font-mono">classifyArea()</code> y <code className="bg-[#FEF3C7] px-1 rounded font-mono">calculatePriority()</code> dentro de <code className="bg-[#FEF3C7] px-1 rounded font-mono">ApiMonitorPage.tsx</code>, y redespliega.
-          </div>
-        </div>
-      )}
 
       {/* Log */}
       {logs.length === 0 ? (
