@@ -54,6 +54,8 @@ interface TicketLog {
   area: AreaResult | null;
   priority_score: number | null;
   priority_label: string | null;
+  metrics: Record<string, number> | null;
+  weights: Record<string, number> | null;
   error: string | null;
   started_at: Date;
   finished_at: Date | null;
@@ -94,7 +96,7 @@ async function calculatePriorityViaBackend(
   title: string,
   description: string,
   token: string | null
-): Promise<number> {
+): Promise<{ score: number; metrics: Record<string, number> | null; weights: Record<string, number> | null; urgency?: string }> {
   if (!token) {
     throw new Error('Token no disponible para llamar IA backend');
   }
@@ -118,7 +120,9 @@ async function calculatePriorityViaBackend(
   if (Number.isNaN(score)) {
     throw new Error('Backend IA devolvió un score inválido');
   }
-  return score;
+  const metrics = data?.metrics && typeof data.metrics === 'object' ? data.metrics as Record<string, number> : null;
+  const weights = data?.weights && typeof data.weights === 'object' ? data.weights as Record<string, number> : null;
+  return { score, metrics, weights, urgency: data?.urgency };
 }
 
 function priorityLabel(score: number): string {
@@ -230,6 +234,26 @@ function TicketLogCard({ log }: { log: TicketLog }) {
         </div>
       </div>
 
+      {/* Metrics */}
+      {log.metrics && log.weights && (
+        <div className="mt-3 border-t border-[#E5E7EB] pt-3">
+          <div className="text-[11px] text-[#6B7280] mb-1">Factores de prioridad (0–100) · ponderados</div>
+          <div className="grid grid-cols-2 gap-2 text-[11px] text-[#4B5563]">
+            {Object.entries(log.metrics).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-2 py-1">
+                <span className="truncate mr-2">{key}</span>
+                <span className="font-mono text-[11px]">
+                  {value}
+                  {log.weights?.[key] !== undefined && (
+                    <span className="text-[#9CA3AF]"> · w={log.weights[key].toFixed(2)}</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Error */}
       {log.error && (
         <div className="mt-3 px-3 py-2 bg-[#FFF1F2] border border-[#FECDD3] rounded-lg text-[11.5px] text-[#E11D48]">
@@ -253,6 +277,40 @@ export default function ApiMonitorPage() {
   const knownIds = useRef<Set<number>>(new Set());
   const processingQueue = useRef<Set<number>>(new Set());
 
+  // Rehidratar logs desde localStorage para que no se pierdan al cambiar de pestaña
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('vita360_ia_logs_v1');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as any[];
+      if (!Array.isArray(parsed)) return;
+      const restored: TicketLog[] = parsed.map((item) => ({
+        ...item,
+        started_at: item.started_at ? new Date(item.started_at) : new Date(),
+        finished_at: item.finished_at ? new Date(item.finished_at) : null,
+      }));
+      setLogs(restored);
+      // Marcar IDs conocidos para no reprocesar los mismos tickets
+      knownIds.current = new Set(restored.map((l) => l.id));
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Persistir logs en localStorage en tiempo real
+  useEffect(() => {
+    try {
+      const serializable = logs.map((l) => ({
+        ...l,
+        started_at: l.started_at.toISOString(),
+        finished_at: l.finished_at ? l.finished_at.toISOString() : null,
+      }));
+      localStorage.setItem('vita360_ia_logs_v1', JSON.stringify(serializable));
+    } catch {
+      // ignore storage errors
+    }
+  }, [logs]);
+
   // ── Process a single ticket through both phases ───────────────────────────
   const processTicket = async (ticket: { id: number; title: string; description: string }) => {
     if (processingQueue.current.has(ticket.id)) return;
@@ -266,6 +324,8 @@ export default function ApiMonitorPage() {
       area: null,
       priority_score: null,
       priority_label: null,
+      metrics: null,
+      weights: null,
       error: null,
       started_at: new Date(),
       finished_at: null,
@@ -281,11 +341,19 @@ export default function ApiMonitorPage() {
       setLogs(prev => prev.map(l => l.id === ticket.id ? { ...l, area: areaResult, phase: 'calculating_priority' as ProcessingPhase } : l));
 
       // Phase 2: calculate priority (vía backend)
-      const score = await calculatePriorityViaBackend(ticket.title, ticket.description, token || null);
+      const { score, metrics, weights } = await calculatePriorityViaBackend(ticket.title, ticket.description, token || null);
       const label = priorityLabel(score);
 
       setLogs(prev => prev.map(l => l.id === ticket.id
-        ? { ...l, priority_score: score, priority_label: label, phase: 'done' as ProcessingPhase, finished_at: new Date() }
+        ? {
+            ...l,
+            priority_score: score,
+            priority_label: label,
+            metrics,
+            weights,
+            phase: 'done' as ProcessingPhase,
+            finished_at: new Date(),
+          }
         : l));
 
       setTotalProcessed(n => n + 1);
@@ -367,7 +435,6 @@ export default function ApiMonitorPage() {
           { label: 'Procesados hoy', value: totalProcessed, icon: <CheckCircle2 size={15} className="text-[#16A34A]" />, color: 'text-[#16A34A]' },
           { label: 'En proceso', value: activeCount, icon: <Zap size={15} className="text-[#306CBB]" />, color: 'text-[#306CBB]' },
           { label: 'Última verificación', value: lastChecked ? lastChecked.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—', icon: <RefreshCw size={15} className="text-[#9CA3AF]" />, color: 'text-[#6B7280]' },
-         
         ].map(s => (
           <div key={s.label} className="bg-white border border-[#E6EAF0] rounded-lg p-4 shadow-sm flex-1 min-w-[160px]">
             <div className="flex items-center gap-2 mb-1.5">{s.icon}<span className="text-[11.5px] text-[#6B7280]">{s.label}</span></div>
