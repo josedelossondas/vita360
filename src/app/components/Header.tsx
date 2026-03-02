@@ -1,4 +1,4 @@
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
