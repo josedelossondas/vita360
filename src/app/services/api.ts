@@ -25,17 +25,37 @@ export interface Evidence {
 export interface CreateTicketPayload {
   title: string;
   description: string;
+  // Geolocalización (enviada al backend para GIS lookup)
+  lat?: number | null;
+  lng?: number | null;
+  timestamp?: string | null;
   // Foto (máx 1) integrada a la solicitud. URL o DataURL (base64)
   image_url?: string | null;
 }
 
 // Respuesta real del backend al crear ticket (ver main.py)
 export interface CreateTicketResponse {
+  id: number;
   ticket_id: number;
   area: string;
-  priority: string;
+  priority: number;         // score 0-100
+  urgency_level: string;    // Alta / Media / Baja
   planned_date: string;
   evidence_id: number | null;
+  metrics: {
+    riesgo_seguridad: number;
+    urgencia: number;
+    impacto: number;
+    sla_legal: number;
+    vulnerabilidad_lugar: number;
+  };
+  location_context: {
+    near_school: boolean;
+    near_hospital: boolean;
+    near_high_traffic: boolean;
+    in_critical_zone: boolean;
+  };
+  reasoning: string;
 }
 
 export interface DashboardStats {

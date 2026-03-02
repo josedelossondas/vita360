@@ -73,20 +73,20 @@ export default function ReportarProblemaPage() {
     setError(null);
 
     try {
-      // Crear ticket
+      // Crear ticket enviando coordenadas y timestamp para GIS lookup + IA
       const created = await apiTickets.create({
         title,
         description,
-        // El backend calcula área, prioridad y urgencia en base a la descripción.
-        // Solo mandamos título, descripción e imagen principal (si existiera).
+        lat:       geolocation?.latitude  ?? null,
+        lng:       geolocation?.longitude ?? null,
+        timestamp: new Date().toISOString(),
       });
 
-      const ticketId = created.ticket_id;
+      const ticketId = created.ticket_id ?? (created as any).id;
 
-      // Subir fotos
-      for (const photo of photos) {
-        const base64 = photo.preview;
-        await apiEvidence.upload(ticketId, base64, `Foto del problema: ${title}`);
+      // Subir fotos (máx 1 por limitación del backend)
+      for (const photo of photos.slice(0, 1)) {
+        await apiEvidence.upload(ticketId, photo.preview, `Foto del problema: ${title}`);
       }
 
       setSuccess(true);
@@ -96,8 +96,12 @@ export default function ReportarProblemaPage() {
       setPhotos([]);
       setUrgencyLevel('media');
 
-      // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => setSuccess(false), 3000);
+      // Log del resultado de la IA (visible en consola del navegador)
+      if ((created as any).priority !== undefined) {
+        console.info(`[Vita360] Ticket #${ticketId} | Área: ${created.area} | Prioridad: ${created.priority} | ${created.urgency_level}`);
+      }
+
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar reporte');
     } finally {

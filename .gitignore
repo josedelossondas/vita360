@@ -7,10 +7,8 @@ build/
 *.log
 
 # Env
-.env.development
+.env
 .env.local
-.env.example
-.env.production
 
 # OS
 .DS_Store
