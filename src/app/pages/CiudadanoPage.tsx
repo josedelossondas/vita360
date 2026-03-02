@@ -147,9 +147,7 @@ export default function CiudadanoPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        // Solo mostrar confirmación de recepción — área y prioridad se verán en el detalle
-        // del ticket una vez que la IA complete el triage
-        setSuccessMsg(`¡Solicitud #${data.ticket_id} enviada correctamente! La IA analizará tu reporte y lo clasificará en breve.`);
+        setSuccessMsg(`Ticket #${data.ticket_id} enviado · Área: ${data.area} · Prioridad: ${data.priority}`);
         setDescription('');
         setPhotoDataUrl('');
         setShowForm(false);
@@ -263,7 +261,7 @@ export default function CiudadanoPage() {
 
       {/* ── Formulario nueva solicitud ──────────────────────────────────────── */}
       {showForm && (
-        <div className="glass-card p-5 mb-5">
+        <div className="bg-card rounded-xl border border-border shadow-sm p-5 mb-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[14px] font-semibold">Nueva solicitud ciudadana</h2>
             <button
@@ -366,7 +364,7 @@ export default function CiudadanoPage() {
           >
             ← Volver a mis solicitudes
           </button>
-          <div className="glass-card p-5 space-y-5">
+          <div className="bg-card rounded-xl border border-border shadow-sm p-5 space-y-5">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[11.5px] text-muted-foreground font-mono">#{selectedTicket.id}</span>
@@ -460,12 +458,12 @@ export default function CiudadanoPage() {
         /* ── Lista de tickets ─────────────────────────────────────────────── */
         <div className="space-y-3">
           {loading && tickets.length === 0 && (
-            <div className="glass-card p-8 text-center text-muted-foreground text-[13px]">
+            <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground text-[13px]">
               Cargando solicitudes...
             </div>
           )}
           {!loading && tickets.length === 0 && (
-            <div className="glass-card p-8 text-center">
+            <div className="bg-card rounded-xl border border-border p-8 text-center">
               <AlertTriangle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
               <p className="text-[13px] text-muted-foreground">No has enviado solicitudes aún</p>
               <button onClick={() => setShowForm(true)}
@@ -478,8 +476,8 @@ export default function CiudadanoPage() {
             <button
               key={ticket.id}
               onClick={() => setSelectedTicket(ticket)}
-              className={`w-full text-left glass-card p-4 hover:shadow-2xl transition-all duration-300 focus-visible:ring-2 focus-visible:ring-ring ${
-                selectedTicket?.id === ticket.id ? 'border-primary/60' : ''
+              className={`w-full text-left bg-card rounded-xl border shadow-sm p-4 hover:border-primary/50 transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
+                selectedTicket?.id === ticket.id ? 'border-primary' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between mb-2">

@@ -59,7 +59,7 @@ export default function OrdenesTrabajoPage() {
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-5">
         {stats.map(s => (
-          <div key={s.label} className="glass-card p-5">
+          <div key={s.label} className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl p-5 shadow-xl">
             <div className="text-[12.5px] text-muted-foreground mb-2">{s.label}</div>
             <div className={`text-3xl font-semibold ${s.color}`}>{s.value}</div>
           </div>
@@ -67,7 +67,7 @@ export default function OrdenesTrabajoPage() {
       </div>
 
       {/* Trazabilidad */}
-      <div className="glass-card p-5 mb-5">
+      <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-5 mb-5">
         <h3 className="text-[14px] font-semibold mb-4">Flujo de Trazabilidad</h3>
         <div className="flex items-center gap-4">
           {[
@@ -92,7 +92,7 @@ export default function OrdenesTrabajoPage() {
       </div>
 
       {/* Table */}
-      <div className="glass-card p-0 overflow-hidden">
+      <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-[14px] font-semibold">Órdenes Activas</h2>
           <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}

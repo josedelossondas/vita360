@@ -49,7 +49,7 @@ export default function CasosPage() {
         </button>
       </div>
 
-      <div className="glass-card p-0 overflow-hidden">
+      <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl overflow-hidden">
         <div className="px-5 py-3.5 border-b border-border flex gap-3 flex-wrap">
           <select value={filter} onChange={e => setFilter(e.target.value)}
             className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-[13px] outline-none focus:border-primary cursor-pointer">

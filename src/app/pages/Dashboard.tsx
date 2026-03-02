@@ -79,14 +79,14 @@ const mapUrgencyToColor = (u: string) => {
 function KPICard({ title, value, color, progress }: { title: string; value: string | number; color: string; progress: number }) {
   const big = title === 'Tiempo Promedio Respuesta';
   return (
-    <div className="glass-card p-5 flex-1">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl p-5 shadow-xl flex-1 hover:bg-white/70 hover:shadow-2xl transition-all duration-300">
       <div className="text-[12px] text-muted-foreground mb-2">{title}</div>
       <div className={`${big ? 'text-[30px]' : 'text-[36px]'} font-semibold mb-3 ${
         color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-foreground'
       }`}>
         {value}
       </div>
-      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-white/30 rounded-full overflow-hidden">
         <div
           className={`h-full ${color === 'green' ? 'bg-green-600' : color === 'red' ? 'bg-red-500' : color === 'orange' ? 'bg-amber-500' : 'bg-primary'}`}
           style={{ width: `${progress}%` }}
@@ -158,7 +158,7 @@ function MultiSelect({ id, openId, setOpenId, label, options, selected, onChange
         <ChevronDown size={11} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute left-0 mt-1.5 min-w-[165px] glass-card p-1.5 space-y-0.5 z-50">
+        <div className="absolute left-0 mt-1.5 min-w-[165px] bg-white/80 backdrop-blur-lg border border-white/30 rounded-xl shadow-xl z-50 p-1.5 space-y-0.5">
           {options.map((opt) => {
             const checked = selected.includes(opt);
             return (
@@ -279,7 +279,7 @@ function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1.5 w-[280px] glass-card p-3 z-50">
+        <div className="absolute right-0 mt-1.5 w-[280px] bg-white/80 backdrop-blur-lg border border-white/30 rounded-xl shadow-xl z-50 p-3">
           <div className="grid grid-cols-3 gap-1 mb-3">
             {(['hour', 'today', '7d', '30d', 'all'] as DatePreset[]).map((p) => (
               <button
@@ -505,7 +505,7 @@ function MapComponentInline({
   }, [tickets]);
 
   return (
-    <div className="glass-card p-4 mb-6">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-4 mb-6 hover:bg-white/65 transition-all duration-300">
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
@@ -555,7 +555,7 @@ function TicketDetailPanel({ ticket, onClose }: { ticket: Ticket; onClose: () =>
   const ORDER: Record<string, number> = { Recibido: 0, Asignado: 1, 'En Gestión': 2, Resuelto: 3, Cerrado: 4 };
   const currentIdx = ORDER[ticket.status] ?? 0;
   return (
-    <div className="glass-card p-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[11.5px] text-muted-foreground font-mono">#{ticket.id}</span>
@@ -633,7 +633,7 @@ function TicketDetailPanel({ ticket, onClose }: { ticket: Ticket; onClose: () =>
 
 function EmptyDetailPanel() {
   return (
-    <div className="glass-card p-8 text-center sticky top-6">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-8 text-center sticky top-6">
       <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
         <FileQuestion size={20} className="text-muted-foreground" />
       </div>
@@ -677,8 +677,6 @@ export default function Dashboard() {
           ...t,
           area_name: t.area_name || 'Atención General',
           _urgency_score: t.priority_score ?? 0,
-          // Si tiene cuadrilla asignada y aún está en "Recibido", actualizar a "Asignado"
-          status: (t.assigned_to || t.squad_name) && t.status === 'Recibido' ? 'Asignado' : t.status,
         }));
         setTickets(enriched); setPage(1);
         setStats({
@@ -739,7 +737,7 @@ export default function Dashboard() {
       {/* KPIs */}
       <div className="flex gap-4 mb-6 flex-wrap">
         <KPICard title="Total de Tickets" value={stats?.total_tickets || 0} color="gray" progress={100} />
-        <div className="glass-card p-5 flex-1 min-w-[220px]">
+        <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl p-5 shadow-xl flex-1 min-w-[220px] hover:bg-white/70 transition-all duration-300">
           <div className="text-[13px] text-foreground font-medium mb-2">Distribución por estado</div>
           <div className="space-y-1.5 text-[12px] text-muted-foreground">
             {stats && Object.entries(stats.tickets_by_status).map(([status, count]) => {
@@ -772,7 +770,7 @@ export default function Dashboard() {
       <div className="flex gap-6 flex-col lg:flex-row">
         <div className="flex-1 min-w-0">
           {/* Controles */}
-          <div className="glass-card p-3 mb-4 flex items-center justify-between flex-wrap gap-3 text-[12.5px] text-muted-foreground">
+          <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl p-3 shadow-xl mb-4 flex items-center justify-between flex-wrap gap-3 text-[12.5px] text-muted-foreground">
             <div className="flex items-center gap-3 flex-wrap">
               {tickets.length > 0 && (
                 <span>
@@ -810,10 +808,10 @@ export default function Dashboard() {
           </div>
 
           {/* Tabla */}
-          <div className="glass-card p-0 overflow-hidden">
+          <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-secondary border-b border-border">
+                <tr className="bg-white/30 border-b border-white/20">
                   {(['id','title','urgency','priority','area','status','date'] as const).map((col) => {
                     const labels: Record<string,string> = { id:'ID', title:'Título', urgency:'Urgencia', priority:'Prioridad', area:'Área', status:'Estado', date:'Fecha' };
                     const skeys: Partial<Record<string,SortColumn>> = { id:'id', title:'title', priority:'priority', area:'area', status:'status', date:'date' };

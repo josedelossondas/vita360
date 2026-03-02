@@ -87,10 +87,16 @@ export function Layout({ citizen }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%)' }}>
+      {/* Decorative radial blobs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-30 blur-3xl" style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }} />
+        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl" style={{ background: 'radial-gradient(circle, #a5b4fc, transparent)' }} />
+        <div className="absolute -bottom-32 left-1/3 w-[400px] h-[400px] rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, #c4b5fd, transparent)' }} />
+      </div>
       <Sidebar />
       <Header />
-      <main className="ml-[240px] mt-[72px] p-6">
+      <main className="relative z-10 ml-[240px] mt-[72px] p-6">
         <div className="max-w-[1400px] mx-auto">
           <Outlet />
         </div>

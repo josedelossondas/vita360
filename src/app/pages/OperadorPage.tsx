@@ -133,12 +133,24 @@ export default function OperadorPage() {
     if (!token || !selectedTicket || !assignSquad) return;
     setAssigning(true);
     try {
+      // 1. Asignar cuadrilla
       const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/assign`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ squad_name: assignSquad }),
       });
       if (res.ok) {
+        // 2. Si el ticket no está ya en un estado avanzado, moverlo a "Asignado"
+        const currentIdx = STATUS_FLOW.indexOf(selectedTicket.status);
+        const assignedIdx = STATUS_FLOW.indexOf('Asignado');
+        if (currentIdx < assignedIdx) {
+          await fetch(`${API_URL}/tickets/${selectedTicket.id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ status: 'Asignado' }),
+          });
+        }
+
         const freshTickets = await fetchTickets();
         const updated = freshTickets.find((t) => t.id === selectedTicket.id);
         if (updated) setSelectedTicket(updated);
@@ -196,13 +208,13 @@ export default function OperadorPage() {
       {/* KPIs */}
       <div className="grid grid-cols-5 gap-3 mb-5">
         {[
-          { label: 'Total', count: tickets.length, color: 'text-foreground', bg: 'bg-card' },
+          { label: 'Total', count: tickets.length, color: 'text-foreground', bg: 'bg-white/40 backdrop-blur-md' },
           { label: 'Recibidos', count: countByStatus('Recibido'), color: 'text-blue-700', bg: 'bg-blue-50' },
           { label: 'Asignados', count: countByStatus('Asignado'), color: 'text-purple-700', bg: 'bg-purple-50' },
           { label: 'En Gestión', count: countByStatus('En Gestión'), color: 'text-amber-700', bg: 'bg-amber-50' },
           { label: 'Resueltos', count: countByStatus('Resuelto'), color: 'text-green-700', bg: 'bg-green-50' },
         ].map(({ label, count, color, bg }) => (
-          <div key={label} className={`rounded-xl border border-border shadow-sm p-4 ${bg}`}>
+          <div key={label} className={`rounded-2xl border border-white/30 shadow-xl p-4 backdrop-blur-md ${bg}`}>
             <div className="text-[11.5px] text-muted-foreground mb-1">{label}</div>
             <div className={`text-2xl font-semibold ${color}`}>{count}</div>
           </div>
@@ -211,7 +223,7 @@ export default function OperadorPage() {
 
       <div className="grid grid-cols-[1fr_360px] gap-5">
         {/* Tabla tickets */}
-        <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl overflow-hidden">
           <div className="px-5 py-3.5 border-b border-border flex gap-3 flex-wrap items-center">
             <h2 className="text-[13.5px] font-semibold flex-1">Solicitudes ({filtered.length})</h2>
             <select
@@ -234,7 +246,7 @@ export default function OperadorPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-secondary border-b border-border">
+              <thead className="bg-white/30 border-b border-white/20">
                 <tr>
                   {['#', 'Título', 'Urgencia', 'Área', 'Cuadrilla', 'Estado'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11.5px] text-muted-foreground font-medium">{h}</th>
@@ -277,7 +289,7 @@ export default function OperadorPage() {
 
         {/* Panel de gestión */}
         {selectedTicket ? (
-          <div className="bg-card rounded-xl border border-border shadow-sm p-5 space-y-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+          <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-5 space-y-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto">
             {/* Info básica */}
             <div>
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -418,7 +430,7 @@ export default function OperadorPage() {
             )}
           </div>
         ) : (
-          <div className="bg-card rounded-xl border border-border shadow-sm p-8 text-center">
+          <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-8 text-center">
             <AlertTriangle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
             <p className="text-[13px] text-muted-foreground">
               Selecciona un ticket para gestionar, asignar cuadrilla y actualizar estado

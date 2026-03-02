@@ -1,41 +1,65 @@
-import React from 'react';
+import { type ReactNode } from 'react';
 
 interface GlassCardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  /** 'default' uses glass-card, 'soft' uses lighter glass, 'flat' uses white bg with border */
-  variant?: 'default' | 'soft' | 'flat';
-  /** Extra padding override */
-  padding?: string;
-  onClick?: () => void;
+  /** Use "lg" for main containers (stronger blur), "md" for inner cards */
+  blur?: 'md' | 'lg';
+  /** Extra hover interactivity */
+  hoverable?: boolean;
+  /** Render as a different HTML element */
   as?: 'div' | 'section' | 'article';
 }
 
 /**
- * Reusable glassmorphism card.
- * Replaces repeated bg-card/bg-white + border + shadow-sm patterns.
+ * GlassCard — Reusable glassmorphism container.
+ *
+ * Visual rules:
+ *  - bg-white/10 + backdrop-blur-md (or lg for main containers)
+ *  - border border-white/20
+ *  - rounded-2xl + shadow-xl
+ *  - Optional hover state: hover:bg-white/20 hover:shadow-2xl transition-all
  */
 export function GlassCard({
   children,
   className = '',
-  variant = 'default',
-  padding,
-  onClick,
+  blur = 'md',
+  hoverable = false,
   as: Tag = 'div',
 }: GlassCardProps) {
-  const variantClass =
-    variant === 'soft'
-      ? 'bg-white/50 backdrop-blur-md border border-white/30 shadow-lg rounded-2xl'
-      : variant === 'flat'
-      ? 'bg-white/80 border border-white/40 shadow-md rounded-2xl'
-      : 'glass-card';
+  const blurClass = blur === 'lg' ? 'backdrop-blur-lg' : 'backdrop-blur-md';
+  const hoverClass = hoverable
+    ? 'hover:bg-white/20 hover:shadow-2xl hover:-translate-y-0.5'
+    : '';
 
   return (
     <Tag
-      className={`${variantClass} ${padding ?? 'p-5'} ${onClick ? 'cursor-pointer' : ''} ${className}`}
-      onClick={onClick}
+      className={`
+        bg-white/10 ${blurClass} border border-white/20 rounded-2xl shadow-xl
+        bg-gradient-to-br from-white/20 to-white/5
+        transition-all duration-300 ease-out
+        ${hoverClass}
+        ${className}
+      `}
     >
       {children}
     </Tag>
+  );
+}
+
+/** Lighter inner card — rounded-xl, less opacity */
+export function GlassInner({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`bg-white/5 border border-white/10 rounded-xl ${className}`}
+    >
+      {children}
+    </div>
   );
 }

@@ -3,8 +3,6 @@
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
-  background: linear-gradient(135deg, #ddeeff 0%, #e8eaf6 45%, #ede7f6 100%) fixed;
-  min-height: 100vh;
 }
 
 .font-mono {

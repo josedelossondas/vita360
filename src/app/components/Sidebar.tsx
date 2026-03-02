@@ -134,7 +134,7 @@ export function Sidebar() {
     : 'OP';
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[240px] glass-sidebar flex flex-col z-50">
+    <aside className="fixed left-0 top-0 h-screen w-[240px] bg-white/70 backdrop-blur-lg border-r border-white/30 flex flex-col z-50 shadow-xl">
       {/* Logo */}
       <div className="h-[72px] flex items-center px-5 border-b border-sidebar-border gap-3 shrink-0">
         <img

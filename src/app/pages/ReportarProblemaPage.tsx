@@ -96,12 +96,12 @@ export default function ReportarProblemaPage() {
       setPhotos([]);
       setUrgencyLevel('media');
 
-      // Log del resultado de la IA (visible en consola del navegador)
+      // Solo logging interno — no se muestra al usuario en el formulario
       if ((created as any).priority !== undefined) {
         console.info(`[Vita360] Ticket #${ticketId} | Área: ${created.area} | Prioridad: ${created.priority} | ${created.urgency_level}`);
       }
 
-      setTimeout(() => setSuccess(false), 4000);
+      setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar reporte');
     } finally {
@@ -112,7 +112,7 @@ export default function ReportarProblemaPage() {
   return (
     <div className="min-h-screen bg-[#F5F7FA] pb-8">
       {/* Header */}
-      <div className="bg-white border-b border-[#E6EAF0] px-6 py-6 sticky top-0 z-10">
+      <div className="bg-white/70 backdrop-blur-lg border-b border-white/30 px-6 py-6 sticky top-0 z-10 shadow-sm">
         <h1 className="text-[24px] font-semibold text-[#2F3A46]">Reportar Problema</h1>
         <p className="text-[14px] text-[#6D7783] mt-1">
           Comparte los detalles y fotos de tu problema urbano
@@ -124,9 +124,9 @@ export default function ReportarProblemaPage() {
         <div className="mx-6 mt-4 p-4 bg-[#48946F]/10 border border-[#48946F] rounded-lg flex gap-3">
           <CheckCircle size={20} className="text-[#48946F] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-[#48946F]">¡Reporte enviado!</p>
+            <p className="font-semibold text-[#48946F]">¡Reporte enviado con éxito!</p>
             <p className="text-[13px] text-[#48946F]/80">
-              Tu reporte ha sido registrado. Los operarios lo revisarán pronto.
+              Tu reporte ha sido registrado. Un operador revisará tu caso y te notificaremos sobre la asignación y prioridad.
             </p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function ReportarProblemaPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-6 py-6 space-y-6">
         {/* Localización */}
-        <div className="glass-card p-4">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-lg">
           <button
             type="button"
             onClick={getLocation}
@@ -153,7 +153,7 @@ export default function ReportarProblemaPage() {
         </div>
 
         {/* Título */}
-        <div className="glass-card p-4 space-y-2">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-lg space-y-2">
           <label className="block text-[13px] font-semibold text-[#2F3A46]">
             ¿Cuál es el problema? *
           </label>
@@ -168,7 +168,7 @@ export default function ReportarProblemaPage() {
         </div>
 
         {/* Descripción */}
-        <div className="glass-card p-4 space-y-2">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-lg space-y-2">
           <label className="block text-[13px] font-semibold text-[#2F3A46]">
             Detalles del problema *
           </label>
@@ -183,7 +183,7 @@ export default function ReportarProblemaPage() {
         </div>
 
         {/* Área */}
-        <div className="glass-card p-4 space-y-2">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-lg space-y-2">
           <label className="block text-[13px] font-semibold text-[#2F3A46]">
             Área o categoría *
           </label>
@@ -204,7 +204,7 @@ export default function ReportarProblemaPage() {
         </div>
 
         {/* Urgencia */}
-        <div className="glass-card p-4 space-y-2">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-lg space-y-2">
           <label className="block text-[13px] font-semibold text-[#2F3A46]">
             ¿Qué tan urgente es? *
           </label>
@@ -230,7 +230,7 @@ export default function ReportarProblemaPage() {
         </div>
 
         {/* Fotos */}
-        <div className="bg-white border border-[#E6EAF0] rounded-lg p-4 space-y-4">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-lg space-y-4">
           <label className="block text-[13px] font-semibold text-[#2F3A46]">
             Agregar fotos (opcional pero recomendado)
           </label>

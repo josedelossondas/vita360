@@ -12,7 +12,7 @@ export function Header() {
     : 'U';
 
   return (
-    <header className="fixed top-0 left-[240px] right-0 h-[72px] glass-header flex items-center px-6 gap-8 z-40 transition-shadow">
+    <header className="fixed top-0 left-[240px] right-0 h-[72px] bg-white/60 backdrop-blur-lg border-b border-white/30 flex items-center px-6 gap-8 z-40 shadow-sm transition-shadow">
       {/* Buscador */}
       <div className="flex-1 max-w-[560px]">
         <div className="relative">
