@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, Layers, AlertTriangle, TrendingUp } from 'lucide-react';
 import { mockCases, mockAlerts, mockLayers, type MapLayer } from '../data/mockData';
 import { useFleetStream, type FleetVehicle } from '../../hooks/useFleetStream';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+
+declare global {
+  interface Window { L: any; }
+}
 
 const LAYER_COLORS: Record<string, string> = {
   veredas: '#DC2626',
@@ -13,22 +15,34 @@ const LAYER_COLORS: Record<string, string> = {
 };
 
 // ── Helper: create divIcon for patrol/suspect ──────────────────────────────
-function makeVehicleIcon(type: 'patrol' | 'suspect') {
+function makeVehicleIcon(L: any, type: 'patrol' | 'suspect') {
   if (type === 'suspect') {
     return L.divIcon({
-      html: `<div style="width:26px;height:26px;border-radius:50%;background:#EF4444;border:2.5px solid #991B1B;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;font-family:sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.35)">S</div>`,
+      html: `<div style="
+        width:26px;height:26px;border-radius:50%;
+        background:#EF4444;border:2.5px solid #991B1B;
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:12px;font-family:sans-serif;
+        box-shadow:0 2px 8px rgba(0,0,0,.35);
+      ">S</div>`,
       className: '',
-      iconSize: [26, 26] as [number, number],
-      iconAnchor: [13, 13] as [number, number],
-      popupAnchor: [0, -16] as [number, number],
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -16],
     });
   }
   return L.divIcon({
-    html: `<div style="width:26px;height:26px;border-radius:50%;background:#FBBF24;border:2.5px solid #1E40AF;display:flex;align-items:center;justify-content:center;color:#1E40AF;font-weight:700;font-size:12px;font-family:sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.35)">P</div>`,
+    html: `<div style="
+      width:26px;height:26px;border-radius:50%;
+      background:#FBBF24;border:2.5px solid #1E40AF;
+      display:flex;align-items:center;justify-content:center;
+      color:#1E40AF;font-weight:700;font-size:12px;font-family:sans-serif;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+    ">P</div>`,
     className: '',
-    iconSize: [26, 26] as [number, number],
-    iconAnchor: [13, 13] as [number, number],
-    popupAnchor: [0, -16] as [number, number],
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
   });
 }
 
@@ -49,8 +63,9 @@ export default function MapaUrbano() {
   // ── Update fleet markers on each tick ──────────────────────────────────────
   useEffect(() => {
     if (!fleetTick || !leafletReady.current) return;
+    const L = window.L;
     const map = mapInstance.current;
-    if (!map) return;
+    if (!L || !map) return;
 
     const seenIds = new Set<string>();
 
@@ -70,7 +85,7 @@ export default function MapaUrbano() {
         marker.setLatLng([v.lat, v.lng]);
         marker.getPopup()?.setContent(popupHtml);
       } else {
-        const icon = makeVehicleIcon(v.type as 'patrol' | 'suspect');
+        const icon = makeVehicleIcon(L, v.type as 'patrol' | 'suspect');
         const marker = L.marker([v.lat, v.lng], { icon })
           .bindPopup(popupHtml)
           .addTo(map);
@@ -114,79 +129,81 @@ export default function MapaUrbano() {
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
 
-    const map = L.map(mapRef.current).setView([-33.404, -70.588], 14);
-    mapInstance.current = map;
-    leafletReady.current = true;
+    // Load Leaflet dynamically
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(link);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 20,
-    }).addTo(map);
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    script.onload = () => {
+      const L = window.L;
+      const map = L.map(mapRef.current).setView([-33.449, -70.668], 15);
+      mapInstance.current = map;
+      leafletReady.current = true;      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20,
+      }).addTo(map);
 
-    // Crear grupos de capas con marcadores de mockCases
-    const layerMap: Record<string, string[]> = {
-      veredas: ['CASO-2026-0234', 'CASO-2026-0231'],
-      arboles: ['CASO-2026-0236'],
-      contenedores: ['CASO-2026-0235'],
-      alumbrado: ['CASO-2026-0233'],
-    };
+      // Create layer groups
+      const layerMap: Record<string, string[]> = {
+        veredas: ['CASO-2026-0234', 'CASO-2026-0231'],
+        arboles: ['CASO-2026-0236'],
+        contenedores: ['CASO-2026-0235'],
+        alumbrado: ['CASO-2026-0233'],
+      };
 
-    Object.entries(layerMap).forEach(([layerKey, caseIds]) => {
-      const group = L.layerGroup().addTo(map);
-      layerGroups.current[layerKey] = group;
+      Object.entries(layerMap).forEach(([layerKey, caseIds]) => {
+        const group = L.layerGroup().addTo(map);
+        layerGroups.current[layerKey] = group;
 
-      caseIds.forEach(caseId => {
-        const caso = mockCases.find(c => c.id === caseId);
-        if (!caso) return;
-        const color = LAYER_COLORS[layerKey] || '#1C3A8A';
-        const urgColor = caso.urgencyAI >= 80 ? '#B91C1C' : caso.urgencyAI >= 60 ? '#92400E' : '#065F46';
-        const urgBg = caso.urgencyAI >= 80 ? '#FEE2E2' : caso.urgencyAI >= 60 ? '#FEF3C7' : '#D1FAE5';
-        const urgLabel = caso.urgencyAI >= 80 ? 'Alto' : caso.urgencyAI >= 60 ? 'Medio' : 'Bajo';
-        const slaColor = caso.slaRemaining < 12 ? '#DC2626' : caso.slaRemaining < 24 ? '#D97706' : '#6B7280';
+        caseIds.forEach(caseId => {
+          const caso = mockCases.find(c => c.id === caseId);
+          if (!caso) return;
+          const color = LAYER_COLORS[layerKey] || '#1C3A8A';
+          const urgColor = caso.urgencyAI >= 80 ? '#B91C1C' : caso.urgencyAI >= 60 ? '#92400E' : '#065F46';
+          const urgBg = caso.urgencyAI >= 80 ? '#FEE2E2' : caso.urgencyAI >= 60 ? '#FEF3C7' : '#D1FAE5';
+          const urgLabel = caso.urgencyAI >= 80 ? 'Alto' : caso.urgencyAI >= 60 ? 'Medio' : 'Bajo';
+          const slaColor = caso.slaRemaining < 12 ? '#DC2626' : caso.slaRemaining < 24 ? '#D97706' : '#6B7280';
 
-        const icon = L.divIcon({
-          html: `<div style="width:26px;height:26px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>`,
-          className: '',
-          iconSize: [26, 26] as [number, number],
-          iconAnchor: [13, 26] as [number, number],
-          popupAnchor: [0, -30] as [number, number],
+          const icon = L.divIcon({
+            html: `<div style="width:26px;height:26px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>`,
+            className: '',
+            iconSize: [26, 26],
+            iconAnchor: [13, 26],
+            popupAnchor: [0, -30],
+          });
+
+          const popupContent = `
+            <div style="font-family:'DM Sans',system-ui,sans-serif;padding:0;min-width:220px">
+              <div style="padding:14px 14px 10px">
+                <div style="font-size:13.5px;font-weight:600;color:#1A2332;margin-bottom:3px">${caso.title}</div>
+                <div style="font-size:12px;color:#6B7280;margin-bottom:10px">${caso.location}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                  <span style="padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:500;background:${urgBg};color:${urgColor}">${urgLabel}</span>
+                  ${caso.isRecurring ? `<span style="padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:500;background:#FFEDD5;color:#C2410C">Reincidencia</span>` : ''}
+                </div>
+                <div style="font-size:12px;color:${slaColor};font-family:monospace;font-weight:500;margin-bottom:6px">
+                  SLA: ${caso.slaRemaining}h / ${caso.slaTotal}h restantes
+                </div>
+                <div style="font-size:11px;color:#9CA3AF;font-family:monospace">${caso.id}</div>
+              </div>
+              <div style="border-top:1px solid #F3F4F6;padding:10px 14px">
+                <div style="background:#1C3A8A;color:white;border-radius:7px;padding:7px 12px;font-size:12.5px;font-weight:500;text-align:center;cursor:pointer">
+                  Ver detalle completo →
+                </div>
+              </div>
+            </div>`;
+
+          L.marker([caso.coordinates.lat, caso.coordinates.lng], { icon })
+            .bindPopup(popupContent, { maxWidth: 260, minWidth: 240 })
+            .addTo(group);
         });
-
-        const popupContent = `
-          <div style="font-family:'DM Sans',system-ui,sans-serif;padding:0;min-width:220px">
-            <div style="padding:14px 14px 10px">
-              <div style="font-size:13.5px;font-weight:600;color:#1A2332;margin-bottom:3px">${caso.title}</div>
-              <div style="font-size:12px;color:#6B7280;margin-bottom:10px">${caso.location}</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-                <span style="padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:500;background:${urgBg};color:${urgColor}">${urgLabel}</span>
-                ${caso.isRecurring ? `<span style="padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:500;background:#FFEDD5;color:#C2410C">Reincidencia</span>` : ''}
-              </div>
-              <div style="font-size:12px;color:${slaColor};font-family:monospace;font-weight:500;margin-bottom:6px">
-                SLA: ${caso.slaRemaining}h / ${caso.slaTotal}h restantes
-              </div>
-              <div style="font-size:11px;color:#9CA3AF;font-family:monospace">${caso.id}</div>
-            </div>
-            <div style="border-top:1px solid #F3F4F6;padding:10px 14px">
-              <div style="background:#1C3A8A;color:white;border-radius:7px;padding:7px 12px;font-size:12.5px;font-weight:500;text-align:center;cursor:pointer">
-                Ver detalle completo →
-              </div>
-            </div>
-          </div>`;
-
-        L.marker([caso.coordinates.lat, caso.coordinates.lng], { icon })
-          .bindPopup(popupContent, { maxWidth: 260, minWidth: 240 })
-          .addTo(group);
       });
-    });
-
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-        leafletReady.current = false;
-      }
     };
+    document.body.appendChild(script);
   }, []);
 
   const toggleLayer = (layerId: string) => {

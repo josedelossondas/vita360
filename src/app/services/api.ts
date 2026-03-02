@@ -333,24 +333,23 @@ export const imageToBase64 = (file: File): Promise<string> => {
 };
 
 // ─── HELPER: Compresión de imagen ──────────────────────────────────────────
-// Reduce a 640px máximo de ancho y usa WebP (≈30% más ligero que JPEG).
-// Si el navegador no soporta WebP encoding (Safari antiguo) cae a JPEG.
 
-export const compressImage = (base64: string, maxWidth = 640, quality = 0.65): Promise<string> => {
+export const compressImage = (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      const ratio = Math.min(maxWidth / img.width, 1);
       const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * ratio);
-      canvas.height = Math.round(img.height * ratio);
+      const scale = maxWidth / img.width;
+      canvas.width = maxWidth;
+      canvas.height = img.height * scale;
 
       const ctx = canvas.getContext('2d');
-      if (ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
 
-      // Intentar WebP primero; fallback a JPEG
-      const webp = canvas.toDataURL('image/webp', quality);
-      resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', quality));
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
     };
     img.src = base64;
   });
