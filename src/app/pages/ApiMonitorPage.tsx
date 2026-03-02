@@ -435,6 +435,10 @@ export default function ApiMonitorPage() {
           { label: 'Procesados hoy', value: totalProcessed, icon: <CheckCircle2 size={15} className="text-[#16A34A]" />, color: 'text-[#16A34A]' },
           { label: 'En proceso', value: activeCount, icon: <Zap size={15} className="text-[#306CBB]" />, color: 'text-[#306CBB]' },
           { label: 'Última verificación', value: lastChecked ? lastChecked.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—', icon: <RefreshCw size={15} className="text-[#9CA3AF]" />, color: 'text-[#6B7280]' },
+<<<<<<< HEAD
+=======
+         
+>>>>>>> 52dfd6e04bcd62c5b46d0cac10211fa5f15a5a01
         ].map(s => (
           <div key={s.label} className="bg-white border border-[#E6EAF0] rounded-lg p-4 shadow-sm flex-1 min-w-[160px]">
             <div className="flex items-center gap-2 mb-1.5">{s.icon}<span className="text-[11.5px] text-[#6B7280]">{s.label}</span></div>
