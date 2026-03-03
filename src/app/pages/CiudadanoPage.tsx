@@ -148,7 +148,7 @@ export default function CiudadanoPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSuccessMsg(`Ticket #${data.ticket_id} enviado · Área: ${data.area} · Prioridad: ${data.priority}`);
+        setSuccessMsg(`✅ Solicitud #${data.ticket_id} enviada correctamente. El equipo municipal la revisará pronto.`);
         setDescription('');
         setPhotoDataUrl('');
         setShowForm(false);

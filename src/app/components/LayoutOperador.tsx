@@ -34,10 +34,13 @@ export function LayoutOperador() {
       <div className="fixed top-0 left-0 right-0 z-50">
         <BrandTopbar />
 
+        {/* Hairline GRC signature */}
+        <div className="h-[3px] w-full" style={{ background: 'var(--hairline-accent)' }} />
+
         <header
           className={`h-[60px] flex items-center justify-between px-6 transition-all duration-200 ${scrolled
-              ? 'glass border-b border-white/30'
-              : 'bg-card border-b border-border'
+            ? 'glass border-b border-white/30'
+            : 'bg-card border-b border-border'
             }`}
         >
           {/* Logo + brand + navegación */}
@@ -102,8 +105,8 @@ export function LayoutOperador() {
         </header>
       </div>
 
-      {/* offset: topbar 30px + header 60px = 90px */}
-      <main className="mt-[90px] p-6">
+      {/* offset: topbar 30px + hairline 3px + header 60px = 93px */}
+      <main className="mt-[93px] p-6">
         <Outlet />
       </main>
     </div>
