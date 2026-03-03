@@ -31,11 +31,14 @@ export function Layout({ citizen }: LayoutProps) {
         <div className="fixed top-0 left-0 right-0 z-50">
           <BrandTopbar />
 
-          {/* Header principal — glass cuando hay scroll */}
+          {/* Hairline GRC signature */}
+          <div className="h-[3px] w-full" style={{ background: 'var(--hairline-accent)' }} />
+
+          {/* Header principal */}
           <header
             className={`h-[60px] flex items-center justify-between px-4 sm:px-6 transition-all duration-200 ${scrolled
-                ? 'glass border-b border-white/25 shadow-sm'
-                : 'bg-card border-b border-border'
+              ? 'glass border-b border-white/25 shadow-sm'
+              : 'bg-card border-b border-border'
               }`}
           >
             {/* Logo + marca */}
@@ -77,8 +80,8 @@ export function Layout({ citizen }: LayoutProps) {
           </header>
         </div>
 
-        {/* Offset = topbar (30px) + header (60px) */}
-        <main className="pt-[90px] px-4 sm:px-6 pb-8 max-w-4xl mx-auto">
+        {/* Offset = topbar (30px) + hairline (3px) + header (60px) = 93px */}
+        <main className="pt-[93px] px-4 sm:px-6 pb-8 max-w-4xl mx-auto">
           <Outlet />
         </main>
       </div>
@@ -90,7 +93,7 @@ export function Layout({ citizen }: LayoutProps) {
     <div className="min-h-screen bg-background">
       <Sidebar />
       <Header />
-      <main className="ml-[240px] mt-[72px] p-6">
+      <main className="ml-[240px] mt-[71px] p-6">
         <div className="max-w-[1400px] mx-auto">
           <Outlet />
         </div>

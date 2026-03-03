@@ -42,10 +42,29 @@
   --success: #16A34A;
   --warning: #D97706;
   /* Glass tokens */
-  --glass-bg: rgba(255,255,255,0.65);
-  --glass-border: rgba(255,255,255,0.35);
-  --glass-shadow: 0 10px 30px rgba(16,24,40,0.08);
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
   --glass-blur: 16px;
+
+  /* ── Colores institucionales Vitacura ── */
+  --inst-blue: #2596be;
+  --inst-blue-light: rgba(37, 150, 190, 0.12);
+  --inst-blue-border: rgba(37, 150, 190, 0.30);
+  --inst-lime: #c0cf05;
+  --inst-lime-light: rgba(192, 207, 5, 0.12);
+  --inst-lime-border: rgba(192, 207, 5, 0.35);
+  --inst-magenta: #b82c87;
+  --inst-magenta-light: rgba(184, 44, 135, 0.10);
+  --inst-magenta-border: rgba(184, 44, 135, 0.28);
+
+  /* ── Firma GRC — hairline + header gradient ── */
+  /* Línea de acento bajo header (gradiente institucional) */
+  --hairline-accent: linear-gradient(90deg, var(--inst-blue) 0%, var(--primary) 45%, rgba(28, 58, 138, 0.10) 100%);
+  /* Gradiente superior de cards tipo GRC */
+  --card-topline: linear-gradient(90deg, var(--primary) 0%, var(--inst-blue) 60%, transparent 100%);
+  /* Fondo login — overlay sobre imagen hero */
+  --login-overlay: linear-gradient(135deg, rgba(28, 58, 138, 0.78) 0%, rgba(37, 150, 190, 0.52) 55%, rgba(28, 58, 138, 0.70) 100%);
 }
 
 .dark {
@@ -128,22 +147,65 @@
   --color-glass-bg: var(--glass-bg);
   --color-glass-border: var(--glass-border);
   --shadow-glass: var(--glass-shadow);
+  /* Institutional colors */
+  --color-inst-blue: var(--inst-blue);
+  --color-inst-lime: var(--inst-lime);
+  --color-inst-magenta: var(--inst-magenta);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'DM Sans', system-ui, sans-serif;
   }
-  html { font-size: var(--font-size); }
-  h1 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; }
-  h2 { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
-  h3 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
-  h4 { font-size: 0.9rem; font-weight: 500; line-height: 1.4; }
-  label { font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
-  button { font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
-  input { font-size: 0.875rem; font-weight: 400; line-height: 1.5; }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
 }

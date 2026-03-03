@@ -134,8 +134,8 @@ export function CiudadanoLayout() {
                   setShowMenu(false);
                 }}
                 className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-primary'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-primary'
                   } ${item.highlight ? 'relative' : ''}`}
               >
                 {item.highlight && (
@@ -165,8 +165,8 @@ export function CiudadanoLayout() {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-[13px] transition-colors ${isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                   }`}
               >
                 <Icon size={16} />

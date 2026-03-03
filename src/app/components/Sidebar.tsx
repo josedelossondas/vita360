@@ -84,8 +84,8 @@ const NavItem = ({
         <button
           onClick={onToggle}
           className={`w-full flex items-center gap-3 h-[40px] px-4 cursor-pointer transition-colors relative group ${isOpen
-              ? 'bg-accent text-primary'
-              : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+            ? 'bg-accent text-primary'
+            : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
             }`}
         >
           {isOpen && (
@@ -141,8 +141,11 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[240px] bg-sidebar border-r border-sidebar-border flex flex-col z-50 shadow-sm">
+      {/* Hairline GRC signature — misma firma que el header */}
+      <div className="h-[3px] w-full shrink-0" style={{ background: 'var(--hairline-accent)' }} />
+
       {/* Logo */}
-      <div className="h-[72px] flex items-center px-5 border-b border-sidebar-border gap-3 shrink-0">
+      <div className="h-[68px] flex items-center px-5 border-b border-sidebar-border gap-3 shrink-0">
         <img
           src={VITACURA_LOGO}
           alt="Municipalidad de Vitacura"
@@ -189,8 +192,8 @@ export function Sidebar() {
                   <Link
                     to={item.path}
                     className={`flex items-center gap-3 h-[40px] px-4 cursor-pointer transition-colors relative ${location.pathname === item.path
-                        ? 'bg-accent text-primary font-semibold'
-                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                      ? 'bg-accent text-primary font-semibold'
+                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                       }`}
                   >
                     {location.pathname === item.path && (

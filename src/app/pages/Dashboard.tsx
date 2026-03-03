@@ -54,21 +54,21 @@ const STATUS_LIST = ['Recibido', 'Asignado', 'En Gestión', 'Resuelto', 'Cerrado
 
 const mapStatusToColor = (s: string) => {
   switch (s?.toLowerCase()) {
-    case 'resuelto':   return 'bg-green-600';
-    case 'recibido':   return 'bg-primary';
-    case 'asignado':   return 'bg-purple-600';
+    case 'resuelto': return 'bg-green-600';
+    case 'recibido': return 'bg-primary';
+    case 'asignado': return 'bg-purple-600';
     case 'en gestión': return 'bg-amber-500';
-    case 'cerrado':    return 'bg-slate-400';
-    default:           return 'bg-slate-400';
+    case 'cerrado': return 'bg-slate-400';
+    default: return 'bg-slate-400';
   }
 };
 
 const mapUrgencyToColor = (u: string) => {
   switch (u?.toLowerCase()) {
-    case 'alta':  return 'bg-red-500';
+    case 'alta': return 'bg-red-500';
     case 'media': return 'bg-amber-500';
-    case 'baja':  return 'bg-green-600';
-    default:      return 'bg-slate-400';
+    case 'baja': return 'bg-green-600';
+    default: return 'bg-slate-400';
   }
 };
 
@@ -81,9 +81,8 @@ function KPICard({ title, value, color, progress }: { title: string; value: stri
   return (
     <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl p-5 shadow-xl flex-1 hover:bg-white/70 hover:shadow-2xl transition-all duration-300">
       <div className="text-[12px] text-muted-foreground mb-2">{title}</div>
-      <div className={`${big ? 'text-[30px]' : 'text-[36px]'} font-semibold mb-3 ${
-        color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-foreground'
-      }`}>
+      <div className={`${big ? 'text-[30px]' : 'text-[36px]'} font-semibold mb-3 ${color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-foreground'
+        }`}>
         {value}
       </div>
       <div className="w-full h-1.5 bg-white/30 rounded-full overflow-hidden">
@@ -145,9 +144,8 @@ function MultiSelect({ id, openId, setOpenId, label, options, selected, onChange
       <button
         type="button"
         onClick={() => setOpenId(open ? null : id)}
-        className={`px-3 py-1.5 rounded-full border text-[12px] inline-flex items-center gap-1.5 transition-colors ${
-          n > 0 ? 'border-primary bg-accent text-primary' : 'border-border bg-card text-muted-foreground'
-        }`}
+        className={`px-3 py-1.5 rounded-full border text-[12px] inline-flex items-center gap-1.5 transition-colors ${n > 0 ? 'border-primary bg-accent text-primary' : 'border-border bg-card text-muted-foreground'
+          }`}
       >
         {label}
         {n > 0 && (
@@ -164,13 +162,11 @@ function MultiSelect({ id, openId, setOpenId, label, options, selected, onChange
             return (
               <label
                 key={opt}
-                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-[12.5px] ${
-                  checked ? 'bg-accent text-primary' : 'hover:bg-secondary text-foreground'
-                }`}
+                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-[12.5px] ${checked ? 'bg-accent text-primary' : 'hover:bg-secondary text-foreground'
+                  }`}
               >
-                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${
-                  checked ? 'bg-primary border-primary' : 'border-border'
-                }`}>
+                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${checked ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
                   {checked && (
                     <svg viewBox="0 0 10 8" width="8" height="8" fill="none">
                       <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -203,8 +199,8 @@ function MultiSelect({ id, openId, setOpenId, label, options, selected, onChange
 // Date Range Picker
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DAYS_ES = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const DAYS_ES = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
 
 function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
   id: string;
@@ -232,8 +228,8 @@ function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
     if (preset === 'all') { setDateRange({ preset: 'all', from: null, to: null }); setOpenId(null); return; }
     if (preset === 'hour') { setDateRange({ preset: 'hour', from: new Date(now.getTime() - 3600000), to: now }); setOpenId(null); return; }
     if (preset === 'today') { const s = new Date(now.getFullYear(), now.getMonth(), now.getDate()); setDateRange({ preset: 'today', from: s, to: now }); setOpenId(null); return; }
-    if (preset === '7d') { setDateRange({ preset: '7d', from: new Date(now.getTime() - 7*86400000), to: now }); setOpenId(null); return; }
-    if (preset === '30d') { setDateRange({ preset: '30d', from: new Date(now.getTime() - 30*86400000), to: now }); setOpenId(null); return; }
+    if (preset === '7d') { setDateRange({ preset: '7d', from: new Date(now.getTime() - 7 * 86400000), to: now }); setOpenId(null); return; }
+    if (preset === '30d') { setDateRange({ preset: '30d', from: new Date(now.getTime() - 30 * 86400000), to: now }); setOpenId(null); return; }
     setDateRange({ preset: 'custom', from: null, to: null });
     setSelectingFrom(true);
   };
@@ -269,9 +265,8 @@ function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
       <button
         type="button"
         onClick={() => setOpenId(open ? null : id)}
-        className={`px-3 py-1.5 rounded-full border text-[12px] inline-flex items-center gap-1.5 transition-colors ${
-          isActive ? 'border-primary bg-accent text-primary' : 'border-border bg-card text-muted-foreground'
-        }`}
+        className={`px-3 py-1.5 rounded-full border text-[12px] inline-flex items-center gap-1.5 transition-colors ${isActive ? 'border-primary bg-accent text-primary' : 'border-border bg-card text-muted-foreground'
+          }`}
       >
         <Calendar size={12} />
         <span>{label}</span>
@@ -286,9 +281,8 @@ function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
                 key={p}
                 type="button"
                 onClick={() => applyPreset(p)}
-                className={`px-2 py-1 rounded-lg text-[11px] border transition-colors text-center ${
-                  dateRange.preset === p ? 'bg-accent border-primary text-primary font-medium' : 'border-border text-muted-foreground hover:bg-secondary'
-                }`}
+                className={`px-2 py-1 rounded-lg text-[11px] border transition-colors text-center ${dateRange.preset === p ? 'bg-accent border-primary text-primary font-medium' : 'border-border text-muted-foreground hover:bg-secondary'
+                  }`}
               >
                 {presetLabel[p]}
               </button>
@@ -296,9 +290,8 @@ function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
             <button
               type="button"
               onClick={() => { setDateRange({ preset: 'custom', from: null, to: null }); setSelectingFrom(true); }}
-              className={`px-2 py-1 rounded-lg text-[11px] border transition-colors text-center ${
-                dateRange.preset === 'custom' ? 'bg-accent border-primary text-primary font-medium' : 'border-border text-muted-foreground hover:bg-secondary'
-              }`}
+              className={`px-2 py-1 rounded-lg text-[11px] border transition-colors text-center ${dateRange.preset === 'custom' ? 'bg-accent border-primary text-primary font-medium' : 'border-border text-muted-foreground hover:bg-secondary'
+                }`}
             >
               Personalizado
             </button>
@@ -337,13 +330,12 @@ function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
                     <button
                       type="button"
                       onClick={() => handleDayClick(d)}
-                      className={`w-full h-full rounded-lg text-[11.5px] transition-colors ${
-                        isSame(d, dateRange.from) || isSame(d, dateRange.to)
-                          ? 'bg-primary text-primary-foreground font-semibold'
-                          : inRange(d)
+                      className={`w-full h-full rounded-lg text-[11.5px] transition-colors ${isSame(d, dateRange.from) || isSame(d, dateRange.to)
+                        ? 'bg-primary text-primary-foreground font-semibold'
+                        : inRange(d)
                           ? 'bg-accent text-primary'
                           : 'hover:bg-secondary text-foreground'
-                      }`}
+                        }`}
                     >
                       {d.getDate()}
                     </button>
@@ -506,31 +498,34 @@ function MapComponentInline({
 
   return (
     <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-4 mb-6 hover:bg-white/65 transition-all duration-300">
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
-            <MapPin size={16} />
-          </span>
-          <div className="text-[15px] font-semibold text-foreground">VITwin</div>
-          {fleetTick > 0 && (
-            <span className="px-2 py-0.5 rounded-md bg-secondary text-[11px] font-mono text-muted-foreground">tick #{fleetTick}</span>
-          )}
-          {patrolCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-[11px] font-medium text-amber-700 border border-amber-200">{patrolCount} P</span>
-          )}
-          {suspectVisible && (
-            <span className="px-2 py-0.5 rounded-full bg-red-50 text-[11px] font-medium text-red-700 border border-red-200 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />Sospechoso
+      {/* Wrapper con z-index superior al de las tiles de Leaflet (z ~400) */}
+      <div className="relative z-[1001]">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
+              <MapPin size={16} />
             </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <MultiSelect id="status" openId={openDropdown} setOpenId={setOpenDropdown} label="Estado" options={STATUS_LIST} selected={selectedStatuses} onChange={setSelectedStatuses} />
-          <MultiSelect id="area" openId={openDropdown} setOpenId={setOpenDropdown} label="Área" options={allAreas} selected={selectedAreas} onChange={setSelectedAreas} />
-          <MiniCalendar id="date" openId={openDropdown} setOpenId={setOpenDropdown} dateRange={dateRange} setDateRange={setDateRange} />
-          <FlipSwitch label="Cámaras" value={showCameras} onChange={setShowCameras} />
-          <FlipSwitch label="Vehículos" value={showVehicles} onChange={setShowVehicles} />
-          <div className="text-[11px] text-muted-foreground px-2 py-1 rounded-full bg-secondary border border-border">⏱ {currentTime} hrs</div>
+            <div className="text-[15px] font-semibold text-foreground">VITwin</div>
+            {fleetTick > 0 && (
+              <span className="px-2 py-0.5 rounded-md bg-secondary text-[11px] font-mono text-muted-foreground">tick #{fleetTick}</span>
+            )}
+            {patrolCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-amber-50 text-[11px] font-medium text-amber-700 border border-amber-200">{patrolCount} P</span>
+            )}
+            {suspectVisible && (
+              <span className="px-2 py-0.5 rounded-full bg-red-50 text-[11px] font-medium text-red-700 border border-red-200 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />Sospechoso
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <MultiSelect id="status" openId={openDropdown} setOpenId={setOpenDropdown} label="Estado" options={STATUS_LIST} selected={selectedStatuses} onChange={setSelectedStatuses} />
+            <MultiSelect id="area" openId={openDropdown} setOpenId={setOpenDropdown} label="Área" options={allAreas} selected={selectedAreas} onChange={setSelectedAreas} />
+            <MiniCalendar id="date" openId={openDropdown} setOpenId={setOpenDropdown} dateRange={dateRange} setDateRange={setDateRange} />
+            <FlipSwitch label="Cámaras" value={showCameras} onChange={setShowCameras} />
+            <FlipSwitch label="Vehículos" value={showVehicles} onChange={setShowVehicles} />
+            <div className="text-[11px] text-muted-foreground px-2 py-1 rounded-full bg-secondary border border-border">⏱ {currentTime} hrs</div>
+          </div>
         </div>
       </div>
 
@@ -786,11 +781,10 @@ export default function Dashboard() {
                       key={level}
                       type="button"
                       onClick={() => setSelectedUrgencies((prev) => prev.includes(level) ? prev.filter((u) => u !== level) : [...prev, level])}
-                      className={`px-2 py-1 rounded-full border text-[11px] transition-colors ${
-                        selectedUrgencies.includes(level)
-                          ? 'bg-orange-50 border-orange-400 text-orange-700'
-                          : 'bg-card border-border hover:bg-secondary'
-                      }`}
+                      className={`px-2 py-1 rounded-full border text-[11px] transition-colors ${selectedUrgencies.includes(level)
+                        ? 'bg-orange-50 border-orange-400 text-orange-700'
+                        : 'bg-card border-border hover:bg-secondary'
+                        }`}
                     >
                       {level}
                     </button>
@@ -812,18 +806,18 @@ export default function Dashboard() {
             <table className="w-full">
               <thead>
                 <tr className="bg-white/30 border-b border-white/20">
-                  {(['id','title','urgency','priority','area','status','date'] as const).map((col) => {
-                    const labels: Record<string,string> = { id:'ID', title:'Título', urgency:'Urgencia', priority:'Prioridad', area:'Área', status:'Estado', date:'Fecha' };
-                    const skeys: Partial<Record<string,SortColumn>> = { id:'id', title:'title', priority:'priority', area:'area', status:'status', date:'date' };
+                  {(['id', 'title', 'urgency', 'priority', 'area', 'status', 'date'] as const).map((col) => {
+                    const labels: Record<string, string> = { id: 'ID', title: 'Título', urgency: 'Urgencia', priority: 'Prioridad', area: 'Área', status: 'Estado', date: 'Fecha' };
+                    const skeys: Partial<Record<string, SortColumn>> = { id: 'id', title: 'title', priority: 'priority', area: 'area', status: 'status', date: 'date' };
                     const sk = skeys[col]; const sorted = sk && sortColumn === sk;
                     return (
                       <th key={col}
-                        onClick={() => { if (!sk) return; sortColumn === sk ? setSortDirection((d) => d==='asc'?'desc':'asc') : (setSortColumn(sk), setSortDirection('desc')); }}
+                        onClick={() => { if (!sk) return; sortColumn === sk ? setSortDirection((d) => d === 'asc' ? 'desc' : 'asc') : (setSortColumn(sk), setSortDirection('desc')); }}
                         className={`text-left text-[13px] font-semibold text-muted-foreground px-4 py-4 ${sk ? 'cursor-pointer select-none hover:text-foreground transition-colors' : ''}`}
                       >
                         <span className="inline-flex items-center gap-1">
                           {labels[col]}
-                          {sorted && <span className="text-[10px]">{sortDirection==='asc'?'▲':'▼'}</span>}
+                          {sorted && <span className="text-[10px]">{sortDirection === 'asc' ? '▲' : '▼'}</span>}
                         </span>
                       </th>
                     );
@@ -836,15 +830,14 @@ export default function Dashboard() {
                   : filteredCases.map((caso) => (
                     <tr key={caso.id}
                       onClick={() => setSelectedTicket(selectedTicket?.id === caso.id ? null : caso)}
-                      className={`border-b border-border hover:bg-secondary transition-colors cursor-pointer ${
-                        selectedTicket?.id === caso.id ? 'bg-accent border-l-2 border-l-primary' : ''
-                      }`}
+                      className={`border-b border-border hover:bg-secondary transition-colors cursor-pointer ${selectedTicket?.id === caso.id ? 'bg-accent border-l-2 border-l-primary' : ''
+                        }`}
                     >
                       <td className="px-4 py-4"><span className="text-[14px] font-mono text-primary">#{caso.id}</span></td>
                       <td className="px-4 py-4"><span className="text-[13.5px] font-semibold text-foreground">{caso.title}</span></td>
                       <td className="px-4 py-4">
                         <span className={`inline-block px-3 py-1 rounded-full text-[12.5px] font-medium text-white ${mapUrgencyToColor(caso.urgency_level)}`}>
-                          {caso.urgency_level||'—'}
+                          {caso.urgency_level || '—'}
                         </span>
                       </td>
                       <td className="px-4 py-4">
@@ -852,7 +845,7 @@ export default function Dashboard() {
                           <span className="font-mono text-[13px] font-medium text-foreground">{caso._urgency_score}%</span>
                         )}
                       </td>
-                      <td className="px-4 py-4"><span className="text-[13px] text-muted-foreground">{caso.area_name||'—'}</span></td>
+                      <td className="px-4 py-4"><span className="text-[13px] text-muted-foreground">{caso.area_name || '—'}</span></td>
                       <td className="px-4 py-4">
                         <span className={`inline-block px-3 py-1 rounded-full text-[12.5px] font-medium text-white ${mapStatusToColor(caso.status)}`}>
                           {caso.status}
