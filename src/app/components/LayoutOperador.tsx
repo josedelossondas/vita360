@@ -35,11 +35,10 @@ export function LayoutOperador() {
         <BrandTopbar />
 
         <header
-          className={`h-[60px] flex items-center justify-between px-6 transition-all duration-200 ${
-            scrolled
-              ? 'glass border-b border-[rgba(255,255,255,0.35)]'
+          className={`h-[60px] flex items-center justify-between px-6 transition-all duration-200 ${scrolled
+              ? 'glass border-b border-white/30'
               : 'bg-card border-b border-border'
-          }`}
+            }`}
         >
           {/* Logo + brand + navegación */}
           <div className="flex items-center gap-5">
@@ -67,10 +66,9 @@ export function LayoutOperador() {
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-                      isActive
-                        ? 'bg-accent text-primary'
-                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                    `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${isActive
+                      ? 'bg-accent text-primary'
+                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                     }`
                   }
                 >

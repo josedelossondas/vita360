@@ -33,25 +33,24 @@ export function Layout({ citizen }: LayoutProps) {
 
           {/* Header principal — glass cuando hay scroll */}
           <header
-            className={`h-[64px] flex items-center justify-between px-4 sm:px-6 transition-all duration-200 ${
-              scrolled
-                ? 'glass border-b border-glass-border shadow-sm'
+            className={`h-[60px] flex items-center justify-between px-4 sm:px-6 transition-all duration-200 ${scrolled
+                ? 'glass border-b border-white/25 shadow-sm'
                 : 'bg-card border-b border-border'
-            }`}
+              }`}
           >
             {/* Logo + marca */}
             <div className="flex items-center gap-3">
               <img
                 src={VITACURA_LOGO}
                 alt="Municipalidad de Vitacura"
-                className="h-8 object-contain"
+                className="h-7 object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
-              <div className="h-5 w-px bg-border hidden sm:block" />
+              <div className="h-4 w-px bg-border hidden sm:block" />
               <div className="hidden sm:block">
-                <span className="text-[15px] font-semibold text-foreground">
+                <span className="text-[14px] font-semibold text-foreground">
                   Vita<span className="text-primary">360</span>
                 </span>
                 <div className="text-[10px] text-muted-foreground leading-none mt-0.5">
@@ -63,7 +62,7 @@ export function Layout({ citizen }: LayoutProps) {
             {/* Acciones */}
             <div className="flex items-center gap-2 sm:gap-3">
               {user && (
-                <span className="text-[12.5px] text-muted-foreground hidden sm:block">
+                <span className="text-[12px] text-muted-foreground hidden sm:block">
                   {user.name}
                 </span>
               )}
@@ -78,25 +77,20 @@ export function Layout({ citizen }: LayoutProps) {
           </header>
         </div>
 
-        {/* Offset = topbar (30px) + header (64px) */}
-        <main className="pt-[94px] px-4 sm:px-6 pb-8 max-w-4xl mx-auto">
+        {/* Offset = topbar (30px) + header (60px) */}
+        <main className="pt-[90px] px-4 sm:px-6 pb-8 max-w-4xl mx-auto">
           <Outlet />
         </main>
       </div>
     );
   }
 
+  /* Layout operador — fondo limpio con tokens, sin blobs hardcodeados */
   return (
-    <div className="min-h-screen relative overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%)' }}>
-      {/* Decorative radial blobs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-30 blur-3xl" style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }} />
-        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl" style={{ background: 'radial-gradient(circle, #a5b4fc, transparent)' }} />
-        <div className="absolute -bottom-32 left-1/3 w-[400px] h-[400px] rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, #c4b5fd, transparent)' }} />
-      </div>
+    <div className="min-h-screen bg-background">
       <Sidebar />
       <Header />
-      <main className="relative z-10 ml-[240px] mt-[72px] p-6">
+      <main className="ml-[240px] mt-[72px] p-6">
         <div className="max-w-[1400px] mx-auto">
           <Outlet />
         </div>

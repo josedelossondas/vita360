@@ -19,12 +19,12 @@ export function CiudadanoLayout() {
       setIsInstallable(true);
     };
     window.addEventListener('beforeinstallprompt', handler);
-    
+
     // Verificar si ya está instalada
     if (window.navigator.standalone === true) {
       setIsInstallable(false);
     }
-    
+
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
@@ -51,13 +51,13 @@ export function CiudadanoLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 h-[72px] bg-white border-b border-[#E6EAF0] flex items-center px-4 sm:px-6 z-40">
+      <header className="fixed top-0 left-0 right-0 h-[64px] bg-card border-b border-border flex items-center px-4 sm:px-6 z-40">
         <div className="flex-1">
-          <div className="text-[18px] font-semibold">
-            <span className="text-[#2F3A46]">Atención</span>
-            <span className="text-[#306CBB]"> 360</span>
+          <div className="text-[17px] font-semibold">
+            <span className="text-foreground">Atención</span>
+            <span className="text-primary"> 360</span>
           </div>
         </div>
 
@@ -65,7 +65,7 @@ export function CiudadanoLayout() {
           {isInstallable && (
             <button
               onClick={installPWA}
-              className="px-3 py-1.5 bg-[#306CBB] text-white text-[12px] rounded-lg font-medium hover:bg-[#2555a0] transition-colors animate-pulse"
+              className="px-3 py-1.5 bg-primary text-primary-foreground text-[12px] rounded-lg font-medium hover:bg-primary/90 transition-colors animate-pulse"
               title="Instalar aplicación en tu dispositivo"
             >
               📱 Instalar
@@ -73,24 +73,24 @@ export function CiudadanoLayout() {
           )}
           {!isInstallable && (
             <div className="group relative">
-              <button 
-                className="px-3 py-1.5 bg-[#E8F0FE] text-[#306CBB] text-[12px] rounded-lg font-medium"
+              <button
+                className="px-3 py-1.5 bg-accent text-primary text-[12px] rounded-lg font-medium"
                 title="PWA instalada o no disponible"
               >
                 ✓ Instalada
               </button>
-              <div className="hidden group-hover:block absolute top-full right-0 mt-2 p-2 bg-gray-800 text-white text-[11px] rounded whitespace-nowrap z-50">
+              <div className="hidden group-hover:block absolute top-full right-0 mt-2 p-2 bg-foreground text-background text-[11px] rounded whitespace-nowrap z-50">
                 Usa el menú del navegador para más opciones
               </div>
             </div>
           )}
-          <button className="relative p-2 hover:bg-[#f0f0f0] rounded-lg">
-            <Bell size={20} className="text-[#6D7783]" />
-            <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#E53935] rounded-full" />
+          <button className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
+            <Bell size={20} className="text-muted-foreground" />
+            <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-destructive rounded-full" />
           </button>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-[#f0f0f0] rounded-lg"
+            className="p-2 hover:bg-secondary rounded-lg transition-colors"
           >
             {showMenu ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -98,14 +98,14 @@ export function CiudadanoLayout() {
 
         {/* Menu móvil */}
         {showMenu && (
-          <div className="absolute top-[72px] left-0 right-0 bg-white border-b border-[#E6EAF0] p-4 space-y-2 sm:hidden">
-            <div className="py-3 border-b border-[#E6EAF0]">
-              <p className="text-[14px] font-semibold text-[#2F3A46]">{user?.name}</p>
-              <p className="text-[12px] text-[#6D7783]">Ciudadano</p>
+          <div className="absolute top-[64px] left-0 right-0 bg-card border-b border-border p-4 space-y-2 sm:hidden">
+            <div className="py-3 border-b border-border">
+              <p className="text-[14px] font-semibold text-foreground">{user?.name}</p>
+              <p className="text-[12px] text-muted-foreground">Ciudadano</p>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
             >
               <LogOut size={16} />
               <span>Cerrar sesión</span>
@@ -115,12 +115,12 @@ export function CiudadanoLayout() {
       </header>
 
       {/* Main content */}
-      <main className="pt-[72px] pb-[80px] sm:pb-6">
+      <main className="pt-[64px] pb-[80px] sm:pb-6">
         <Outlet />
       </main>
 
       {/* Bottom Navigation - móvil */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E6EAF0] sm:hidden z-40">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border sm:hidden z-40">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -133,15 +133,14 @@ export function CiudadanoLayout() {
                   navigate(item.path);
                   setShowMenu(false);
                 }}
-                className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
-                  isActive
-                    ? 'text-[#306CBB]'
-                    : 'text-[#6D7783] hover:text-[#306CBB]'
-                } ${item.highlight ? 'relative' : ''}`}
+                className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-primary'
+                  } ${item.highlight ? 'relative' : ''}`}
               >
                 {item.highlight && (
                   <div className="absolute inset-0 -top-6 flex items-start justify-center">
-                    <div className="w-12 h-12 bg-[#306CBB] rounded-full flex items-center justify-center text-white shadow-lg">
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-lg">
                       <Icon size={24} />
                     </div>
                   </div>
@@ -155,8 +154,8 @@ export function CiudadanoLayout() {
       </nav>
 
       {/* Desktop navigation */}
-      <nav className="hidden sm:block fixed bottom-0 left-0 right-0 bg-white border-t border-[#E6EAF0] z-40">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+      <nav className="hidden sm:block fixed bottom-0 left-0 right-0 bg-card border-t border-border z-40">
+        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -165,22 +164,21 @@ export function CiudadanoLayout() {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-[14px] transition-colors ${
-                  isActive
-                    ? 'bg-[#306CBB] text-white'
-                    : 'text-[#6D7783] hover:bg-[#f0f0f0]'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-[13px] transition-colors ${isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                  }`}
               >
-                <Icon size={18} />
+                <Icon size={16} />
                 <span>{item.label}</span>
               </button>
             );
           })}
           <button
             onClick={handleLogout}
-            className="ml-auto flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium text-[14px] transition-colors"
+            className="ml-auto flex items-center gap-2 px-4 py-2 text-destructive hover:bg-destructive/10 rounded-lg font-medium text-[13px] transition-colors"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             <span>Salir</span>
           </button>
         </div>

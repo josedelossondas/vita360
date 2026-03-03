@@ -60,40 +60,40 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* ── Panel izquierdo: formulario ── */}
-      <div className="relative flex flex-col justify-center w-full md:w-[480px] lg:w-[520px] shrink-0 bg-background px-8 py-12 z-10">
+      <div className="relative flex flex-col justify-center w-full md:w-[500px] lg:w-[540px] shrink-0 bg-background px-8 py-12 z-10">
+
         {/* Logo institucional + marca */}
         <div className="mb-10">
           <img
             src={VITACURA_LOGO}
             alt="Municipalidad de Vitacura"
-            className="h-10 object-contain mb-5"
+            className="h-10 object-contain mb-6"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
-          <h1 className="text-2xl font-semibold text-foreground leading-tight">
+          <h1 className="text-[26px] font-semibold text-foreground leading-tight tracking-tight">
             Vita<span className="text-primary">360</span>
           </h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            Plataforma de Gestión Urbana Municipal
+          <p className="text-[13px] text-muted-foreground mt-1.5">
+            Plataforma de Gestión Urbana · Municipalidad de Vitacura
           </p>
         </div>
 
         {/* Card glass con el formulario */}
-        <div className="glass rounded-2xl p-6 shadow-lg">
-          {/* Tabs */}
-          <div className="flex rounded-lg bg-secondary p-1 mb-6">
+        <div className="glass rounded-2xl p-7 shadow-md">
+          {/* Tabs login / registro */}
+          <div className="flex rounded-xl bg-secondary p-1 mb-6">
             {(['login', 'register'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                className={`flex-1 py-1.5 rounded-md text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
-                  mode === m
-                    ? 'bg-white text-foreground shadow-sm'
+                className={`flex-1 py-2 rounded-lg text-[13px] font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring ${mode === m
+                    ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                  }`}
               >
-                {m === 'login' ? 'Iniciar Sesión' : 'Registrarse'}
+                {m === 'login' ? 'Iniciar sesión' : 'Registrarse'}
               </button>
             ))}
           </div>
@@ -109,21 +109,21 @@ export default function LoginPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Juan Pérez"
-                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background focus-visible:ring-2 focus-visible:ring-ring/30"
+                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 bg-background transition-colors"
                 />
               </div>
             )}
 
             <div>
               <label className="block text-[12px] text-muted-foreground mb-1.5 font-medium">
-                Email
+                Correo electrónico
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="correo@ejemplo.com"
-                className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background"
+                className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 bg-background transition-colors"
               />
             </div>
 
@@ -136,7 +136,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="mínimo 6 caracteres"
-                className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-background"
+                className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 bg-background transition-colors"
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               />
             </div>
@@ -152,11 +152,10 @@ export default function LoginPage() {
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
-                      className={`flex-1 py-2 rounded-lg text-[13px] border transition-colors ${
-                        role === r
-                          ? 'bg-primary text-white border-primary'
+                      className={`flex-1 py-2 rounded-lg text-[13px] border transition-colors ${role === r
+                          ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-foreground'
-                      }`}
+                        }`}
                     >
                       {r === 'ciudadano' ? '👤 Ciudadano' : '🛠 Operador'}
                     </button>
@@ -171,7 +170,7 @@ export default function LoginPage() {
             )}
 
             {error && (
-              <div className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[12.5px] text-red-700">
+              <div className="px-3 py-2.5 bg-destructive/10 border border-destructive/30 rounded-lg text-[12.5px] text-destructive">
                 ⚠️ {error}
               </div>
             )}
@@ -185,16 +184,16 @@ export default function LoginPage() {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-[13px] font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-[13.5px] font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-ring mt-1"
             >
-              {loading ? 'Cargando...' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}
+              {loading ? 'Cargando...' : mode === 'login' ? 'Ingresar al portal' : 'Crear cuenta'}
             </button>
           </div>
         </div>
 
         {/* Footer */}
         <p className="mt-8 text-[11px] text-muted-foreground text-center">
-          Municipalidad de Vitacura · Portal de Atención Digital
+          © 2025 Municipalidad de Vitacura · Portal de Atención Digital
         </p>
       </div>
 
@@ -205,15 +204,22 @@ export default function LoginPage() {
           alt="Bosque Urbano Vitacura"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Overlay gradiente suave para dar legibilidad */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+        {/* Overlay gradiente institucional */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/70 via-primary/40 to-primary/10" />
         {/* Texto sobre la imagen */}
-        <div className="absolute inset-0 flex flex-col justify-end p-12">
+        <div className="absolute inset-0 flex flex-col justify-end p-12 pb-14">
           <div className="max-w-sm">
-            <h2 className="text-white text-2xl font-semibold leading-tight mb-3">
-              Vitacura, una ciudad que escucha
+            {/* Chip institucional */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 mb-5">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
+              <span className="text-white text-[11px] font-medium tracking-wide">
+                Sistema Municipal de Atención
+              </span>
+            </div>
+            <h2 className="text-white text-[26px] font-semibold leading-tight mb-3">
+              Vitacura,<br />una ciudad que escucha
             </h2>
-            <p className="text-white/80 text-[14px] leading-relaxed">
+            <p className="text-white/80 text-[13.5px] leading-relaxed">
               Reporta problemas, haz seguimiento de tus solicitudes y mantente
               informado sobre los servicios de tu municipio.
             </p>

@@ -13,6 +13,7 @@ import {
   Leaf,
   Phone,
   ChevronRight,
+  HelpCircle,
 } from 'lucide-react';
 
 // Hero imagen ciudadano
@@ -212,14 +213,15 @@ export default function CiudadanoPage() {
               <PlusCircle className="w-4 h-4" />
               Nueva solicitud
             </button>
-            <button
-              onClick={fetchTickets}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg text-[13px] font-medium hover:bg-white/30 transition-colors disabled:opacity-50"
+            <a
+              href="https://vitacura.cl/atencion-vecinos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-white/20 text-white border border-white/30 rounded-lg text-[13px] font-medium hover:bg-white/30 transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Actualizar
-            </button>
+              <HelpCircle className="w-4 h-4" />
+              Ver guía / ayuda
+            </a>
           </div>
         </div>
       </div>
@@ -247,6 +249,14 @@ export default function CiudadanoPage() {
               Hola, <span className="font-medium">{user?.name}</span> — seguimiento de tus reportes ciudadanos
             </p>
           </div>
+          <button
+            onClick={fetchTickets}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg text-[12px] text-muted-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </button>
         </div>
       )}
 
@@ -476,9 +486,8 @@ export default function CiudadanoPage() {
             <button
               key={ticket.id}
               onClick={() => setSelectedTicket(ticket)}
-              className={`w-full text-left bg-card rounded-xl border shadow-sm p-4 hover:border-primary/50 transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
-                selectedTicket?.id === ticket.id ? 'border-primary' : 'border-border'
-              }`}
+              className={`w-full text-left bg-card rounded-xl border shadow-sm p-4 hover:border-primary/50 transition-colors focus-visible:ring-2 focus-visible:ring-ring ${selectedTicket?.id === ticket.id ? 'border-primary' : 'border-border'
+                }`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
