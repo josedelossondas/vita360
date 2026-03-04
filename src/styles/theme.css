@@ -1,70 +1,68 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 14px;
-  --background: #F4F6FA;
-  --foreground: #1A2332;
+  --font-size: 16px;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
   --card: #ffffff;
-  --card-foreground: #1A2332;
-  --popover: #ffffff;
-  --popover-foreground: #1A2332;
-  --primary: #1C3A8A;
-  --primary-foreground: #ffffff;
-  --secondary: #F4F6FA;
-  --secondary-foreground: #1A2332;
-  --muted: #E4E8F0;
-  --muted-foreground: #6B7280;
-  --accent: #EEF2FF;
-  --accent-foreground: #1C3A8A;
-  --destructive: #DC2626;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
   --destructive-foreground: #ffffff;
-  --border: #E4E8F0;
+  --border: rgba(0, 0, 0, 0.1);
   --input: transparent;
-  --input-background: #ffffff;
-  --switch-background: #D1D5DB;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #1C3A8A;
-  --chart-1: #1C3A8A;
-  --chart-2: #16A34A;
-  --chart-3: #D97706;
-  --chart-4: #DC2626;
-  --chart-5: #7C3AED;
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1A2332;
-  --sidebar-primary: #1C3A8A;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #F4F6FA;
-  --sidebar-accent-foreground: #1A2332;
-  --sidebar-border: #E4E8F0;
-  --sidebar-ring: #1C3A8A;
-  --success: #16A34A;
-  --warning: #D97706;
-  /* Glass tokens */
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.35);
-  --glass-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
-  --glass-blur: 16px;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #030213;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 
-  /* ── Colores institucionales Vitacura ── */
-  --inst-blue: #2596be;
-  --inst-blue-light: rgba(37, 150, 190, 0.12);
-  --inst-blue-border: rgba(37, 150, 190, 0.30);
-  --inst-lime: #c0cf05;
-  --inst-lime-light: rgba(192, 207, 5, 0.12);
-  --inst-lime-border: rgba(192, 207, 5, 0.35);
-  --inst-magenta: #b82c87;
-  --inst-magenta-light: rgba(184, 44, 135, 0.10);
-  --inst-magenta-border: rgba(184, 44, 135, 0.28);
+  /* ── Vitacura brand tokens ─────────────────────────────── */
+  --vita-blue: #2596be;
+  --vita-blue-dark: #1a7fa0;
+  --vita-blue-light: rgba(37, 150, 190, 0.12);
+  --vita-lime: #c0cf05;
+  --vita-lime-light: rgba(192, 207, 5, 0.12);
+  --vita-magenta: #b82c87;
+  --vita-magenta-light: rgba(184, 44, 135, 0.1);
 
-  /* ── Firma GRC — hairline + header gradient ── */
-  /* Línea de acento bajo header (gradiente institucional) */
-  --hairline-accent: linear-gradient(90deg, var(--inst-blue) 0%, var(--primary) 45%, rgba(28, 58, 138, 0.10) 100%);
-  /* Gradiente superior de cards tipo GRC */
-  --card-topline: linear-gradient(90deg, var(--primary) 0%, var(--inst-blue) 60%, transparent 100%);
-  /* Fondo login — overlay sobre imagen hero */
-  --login-overlay: linear-gradient(135deg, rgba(28, 58, 138, 0.78) 0%, rgba(37, 150, 190, 0.52) 55%, rgba(28, 58, 138, 0.70) 100%);
+  /* ── Glassmorphism tokens ──────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-border-subtle: rgba(0, 0, 0, 0.07);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 8px 32px rgba(37, 150, 190, 0.1), 0 2px 8px rgba(0,0,0,0.06);
+  --glass-shadow-strong: 0 16px 48px rgba(37, 150, 190, 0.15), 0 4px 16px rgba(0,0,0,0.08);
+
+  /* ── Page background gradient ──────────────────────────── */
+  --page-bg: linear-gradient(135deg, #ffffff 0%, rgba(37,150,190,0.04) 35%, rgba(192,207,5,0.03) 65%, rgba(184,44,135,0.04) 100%);
+
+  /* ── Tricolor stripe ───────────────────────────────────── */
+  --tricolor: linear-gradient(90deg, #2596be 0%, #c0cf05 50%, #b82c87 100%);
 }
 
 .dark {
@@ -143,14 +141,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Glass tokens */
-  --color-glass-bg: var(--glass-bg);
-  --color-glass-border: var(--glass-border);
-  --shadow-glass: var(--glass-shadow);
-  /* Institutional colors */
-  --color-inst-blue: var(--inst-blue);
-  --color-inst-lime: var(--inst-lime);
-  --color-inst-magenta: var(--inst-magenta);
 }
 
 @layer base {
@@ -160,52 +150,56 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', system-ui, sans-serif;
   }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
 
   html {
     font-size: var(--font-size);
   }
 
   h1 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
   }
 
   h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
   }
 
   h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
   }
 
   h4 {
-    font-size: 0.9rem;
-    font-weight: 500;
-    line-height: 1.4;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
   }
 
   label {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   button {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
   input {
-    font-size: 0.875rem;
-    font-weight: 400;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
 }

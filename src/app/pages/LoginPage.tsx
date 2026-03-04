@@ -1,255 +1,215 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useAuth } from '../../context/AuthContext';
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
-const HERO_IMG =
-  'https://vitanew.tchile.com/app/uploads/2023/10/bosque-urbano.jpg';
 const VITACURA_LOGO =
-  'https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png';
+  "https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png";
 
-export default function LoginPage() {
-  const { login, register } = useAuth();
+export function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'ciudadano' | 'operador'>('ciudadano');
-  const [error, setError] = useState('');
+  const { login, register } = useAuth();
+
+  const [tab, setTab] = useState<"login" | "register">("login");
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState<"ciudadano" | "operador">("ciudadano");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSubmit = async () => {
-    setError('');
-    setSuccess('');
-
-    if (mode === 'register' && !name.trim()) { setError('El nombre es obligatorio'); return; }
-    if (!email.trim()) { setError('El email es obligatorio'); return; }
-    if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return; }
-
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setError(""); setSuccess("");
+    if (tab === "register" && !name.trim()) { setError("El nombre es obligatorio"); return; }
+    if (!email.trim()) { setError("El correo es obligatorio"); return; }
+    if (password.length < 6) { setError("La contraseña debe tener al menos 6 caracteres"); return; }
     setLoading(true);
     try {
-      if (mode === 'login') {
+      if (tab === "login") {
         await login(email.trim(), password);
-        navigate('/app');
+        navigate("/app");
       } else {
         await register(name.trim(), email.trim(), password, role);
-        setSuccess('✅ Cuenta creada. Ahora puedes iniciar sesión.');
-        setMode('login');
-        setName('');
-        setPassword('');
+        setSuccess("Cuenta creada. Ahora puedes iniciar sesión.");
+        setTab("login"); setName(""); setPassword("");
       }
     } catch (e: any) {
-      setError(e.message || 'Error inesperado');
-    } finally {
-      setLoading(false);
-    }
+      setError(e.message || "Error inesperado");
+    } finally { setLoading(false); }
   };
 
   return (
-    /* Pantalla completa: imagen hero de fondo */
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-10 overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: "url(https://vitanew.tchile.com/app/uploads/2023/10/bosque-urbano.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}>
 
-      {/* Hero image */}
-      <img
-        src={HERO_IMG}
-        alt="Bosque Urbano Vitacura"
-        className="absolute inset-0 w-full h-full object-cover"
-        aria-hidden="true"
-      />
+      {/* ── Overlay suave blanquecino con tono azul ── */}
+      <div className="absolute inset-0" style={{
+        background: "linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(37,150,190,0.25) 50%, rgba(184,44,135,0.15) 100%)"
+      }} />
 
-      {/* Overlay — gradiente Vitacura institucional (primary + inst-blue) */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'var(--login-overlay)' }}
-        aria-hidden="true"
-      />
+      {/* ── Orbs decorativos difuminados ── */}
+      <div className="absolute top-10 left-10 w-64 h-64 rounded-full" style={{
+        background: "radial-gradient(circle, rgba(37,150,190,0.2) 0%, transparent 70%)",
+        filter: "blur(40px)"
+      }} />
+      <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full" style={{
+        background: "radial-gradient(circle, rgba(184,44,135,0.2) 0%, transparent 70%)",
+        filter: "blur(40px)"
+      }} />
+      <div className="absolute top-1/2 right-1/4 w-40 h-40 rounded-full" style={{
+        background: "radial-gradient(circle, rgba(192,207,5,0.15) 0%, transparent 70%)",
+        filter: "blur(35px)"
+      }} />
 
-      {/* Tarjeta flotante centrada */}
-      <div
-        className="relative z-10 w-full max-w-[420px] rounded-2xl shadow-2xl overflow-hidden"
-        style={{
-          background: 'rgba(255,255,255,0.94)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.60)',
-        }}
-      >
-        {/* Hairline GRC signature — gradiente institucional arriba de la card */}
-        <div className="h-[3px] w-full" style={{ background: 'var(--card-topline)' }} />
+      {/* ── Card principal ── */}
+      <div className="relative z-10 w-full mx-4" style={{ maxWidth: 420 }}>
 
-        <div className="p-7">
+        {/* Barra tricolor superior */}
+        <div className="h-1 rounded-t-2xl w-full" style={{
+          background: "linear-gradient(90deg, #2596be 0%, #c0cf05 50%, #b82c87 100%)"
+        }} />
+
+        <div className="rounded-b-2xl p-8" style={{
+          background: "rgba(255,255,255,0.88)",
+          backdropFilter: "blur(28px)",
+          WebkitBackdropFilter: "blur(28px)",
+          border: "1px solid rgba(255,255,255,0.75)",
+          borderTop: "none",
+          boxShadow: "0 24px 64px rgba(37,150,190,0.18), 0 8px 24px rgba(0,0,0,0.08)",
+        }}>
+
           {/* Logo + título */}
-          <div className="mb-7 text-center">
-            <img
-              src={VITACURA_LOGO}
-              alt="Municipalidad de Vitacura"
-              className="h-8 object-contain mx-auto mb-4"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-            <h1 className="text-[22px] font-bold text-foreground leading-tight tracking-tight">
-              Vita<span className="text-primary">360</span>
+          <div className="flex flex-col items-center mb-6">
+            <img src={VITACURA_LOGO} alt="Municipalidad de Vitacura" className="h-9 object-contain mb-3"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            <h1 className="text-2xl tracking-tight" style={{ color: "#1e293b" }}>
+              Vita<span style={{ color: "#2596be", fontWeight: 700 }}>360</span>
             </h1>
-            <p className="text-[12px] text-muted-foreground mt-1">
-              Plataforma de Gestión Urbana · Municipalidad de Vitacura
+            <p className="text-xs mt-1 tracking-wide" style={{ color: "#64748b" }}>
+              Municipalidad de Vitacura &middot; Plataforma Ciudadana
             </p>
+            {/* Separador tricolor decorativo */}
+            <div className="mt-3 h-0.5 w-16 rounded-full" style={{
+              background: "linear-gradient(90deg, #2596be, #c0cf05, #b82c87)"
+            }} />
           </div>
 
-          {/* Tabs */}
-          <div className="flex rounded-xl bg-secondary p-1 mb-6">
-            {(['login', 'register'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                className={`flex-1 py-2 rounded-lg text-[13px] font-medium transition-all ${mode === m
-                    ? 'bg-white text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                  }`}
-              >
-                {m === 'login' ? 'Iniciar sesión' : 'Registrarse'}
+          {/* Tabs login/register */}
+          <div className="flex rounded-xl p-1 mb-6" style={{
+            background: "rgba(37,150,190,0.07)",
+            border: "1px solid rgba(37,150,190,0.12)",
+          }}>
+            {(["login", "register"] as const).map((t) => (
+              <button key={t} onClick={() => { setTab(t); setError(""); setSuccess(""); }}
+                className="flex-1 py-2 text-xs rounded-lg transition-all duration-200"
+                style={{
+                  background: tab === t
+                    ? "linear-gradient(135deg, #2596be 0%, #1a7fa0 100%)"
+                    : "transparent",
+                  color: tab === t ? "#ffffff" : "#2596be",
+                  fontWeight: tab === t ? 600 : 400,
+                  boxShadow: tab === t ? "0 2px 12px rgba(37,150,190,0.3)" : "none",
+                }}>
+                {t === "login" ? "Iniciar sesión" : "Registrarse"}
               </button>
             ))}
           </div>
 
-          <div className="space-y-4">
-            {mode === 'register' && (
+          {/* Formulario */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {tab === "register" && (
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Nombre completo
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Juan Pérez"
-                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] bg-background outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors"
-                />
+                <label className="block mb-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>Nombre Completo</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Juan Pérez"
+                  className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all"
+                  style={{ borderColor: "rgba(37,150,190,0.2)", background: "rgba(255,255,255,0.8)", color: "#1e293b" }}
+                  onFocus={(e) => { e.target.style.borderColor = "#2596be"; e.target.style.boxShadow = "0 0 0 3px rgba(37,150,190,0.12)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "rgba(37,150,190,0.2)"; e.target.style.boxShadow = "none"; }} />
               </div>
             )}
-
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Correo electrónico
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@ejemplo.com"
-                className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] bg-background outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors"
-              />
+              <label className="block mb-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>Correo Electrónico</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="juan@vitacura.cl"
+                className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all"
+                style={{ borderColor: "rgba(37,150,190,0.2)", background: "rgba(255,255,255,0.8)", color: "#1e293b" }}
+                onFocus={(e) => { e.target.style.borderColor = "#2596be"; e.target.style.boxShadow = "0 0 0 3px rgba(37,150,190,0.12)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "rgba(37,150,190,0.2)"; e.target.style.boxShadow = "none"; }} />
             </div>
-
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="mínimo 6 caracteres"
-                className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] bg-background outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors"
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              />
+              <label className="block mb-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>Contraseña</label>
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+                  className="w-full px-3 py-2.5 pr-10 rounded-lg border text-sm outline-none transition-all"
+                  style={{ borderColor: "rgba(37,150,190,0.2)", background: "rgba(255,255,255,0.8)", color: "#1e293b" }}
+                  onFocus={(e) => { e.target.style.borderColor = "#2596be"; e.target.style.boxShadow = "0 0 0 3px rgba(37,150,190,0.12)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "rgba(37,150,190,0.2)"; e.target.style.boxShadow = "none"; }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "#94a3b8" }}>
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-
-            {mode === 'register' && (
+            {tab === "register" && (
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Tipo de cuenta
-                </label>
+                <label className="block mb-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>Tipo de Cuenta</label>
                 <div className="flex gap-2">
-                  {(['ciudadano', 'operador'] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      className={`flex-1 py-2 rounded-lg text-[13px] border transition-colors ${role === r
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-foreground'
-                        }`}
-                    >
-                      {r === 'ciudadano' ? '👤 Ciudadano' : '🛠 Operador'}
+                  {(["ciudadano", "operador"] as const).map((r) => (
+                    <button key={r} type="button" onClick={() => setRole(r)} className="flex-1 py-2 rounded-lg border text-xs transition-all duration-200"
+                      style={{
+                        borderColor: role === r ? "#2596be" : "rgba(37,150,190,0.15)",
+                        background: role === r ? "rgba(37,150,190,0.1)" : "rgba(255,255,255,0.6)",
+                        color: role === r ? "#2596be" : "#64748b",
+                        fontWeight: role === r ? 600 : 400,
+                      }}>
+                      {r === "ciudadano" ? "Ciudadano" : "Operador"}
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
-                  {role === 'ciudadano'
-                    ? 'Envía solicitudes y haz seguimiento de tus tickets'
-                    : 'Gestiona tickets, asigna equipos y cierra incidencias'}
-                </p>
               </div>
             )}
-
-            {error && (
-              <div className="px-3 py-2.5 bg-destructive/8 border border-destructive/25 rounded-lg text-[12.5px] text-destructive">
-                ⚠️ {error}
-              </div>
-            )}
-            {success && (
-              <div className="px-3 py-2.5 bg-green-50 border border-green-200 rounded-lg text-[12.5px] text-green-700">
-                {success}
-              </div>
-            )}
-
-            {/* CTA principal */}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-[13.5px] font-semibold hover:bg-primary/90 active:scale-[0.99] transition-all disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-primary/50 mt-1"
-            >
-              {loading ? 'Cargando...' : mode === 'login' ? 'Ingresar al portal' : 'Crear cuenta'}
+            {error && <div className="px-3 py-2.5 rounded-lg border text-xs" style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.25)", color: "#dc2626" }}>⚠️ {error}</div>}
+            {success && <div className="px-3 py-2.5 rounded-lg border text-xs" style={{ background: "rgba(192,207,5,0.08)", borderColor: "rgba(192,207,5,0.3)", color: "#7a8504" }}>{success}</div>}
+            <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm transition-all duration-200 mt-2"
+              style={{
+                background: loading
+                  ? "#94a3b8"
+                  : "linear-gradient(135deg, #2596be 0%, #1a7fa0 100%)",
+                color: "#ffffff",
+                fontWeight: 600,
+                boxShadow: loading ? "none" : "0 4px 20px rgba(37,150,190,0.35)",
+                cursor: loading ? "not-allowed" : "pointer",
+              }}>
+              {loading ? "Cargando..." : tab === "login" ? "Ingresar al sistema" : "Crear cuenta"}
+              {!loading && <ArrowRight className="w-4 h-4" />}
             </button>
+          </form>
+
+          {/* Chips de marca */}
+          <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
+            {[
+              { label: "Portal Municipal", bg: "rgba(37,150,190,0.08)", border: "rgba(37,150,190,0.2)", color: "#2596be" },
+              { label: "Atención 24/7", bg: "rgba(192,207,5,0.1)", border: "rgba(192,207,5,0.3)", color: "#7a8504" },
+              { label: "Vitacura", bg: "rgba(184,44,135,0.07)", border: "rgba(184,44,135,0.2)", color: "#b82c87" },
+            ].map((chip) => (
+              <span key={chip.label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
+                style={{ background: chip.bg, border: "1px solid " + chip.border, color: chip.color, fontSize: 10.5, fontWeight: 500 }}>
+                <span className="w-1 h-1 rounded-full" style={{ background: chip.color }} />{chip.label}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <div className="h-px mb-3" style={{ background: "linear-gradient(90deg, transparent, rgba(37,150,190,0.2), rgba(184,44,135,0.2), transparent)" }} />
+            <p className="text-center" style={{ fontSize: 11, color: "#94a3b8" }}>© 2025 Municipalidad de Vitacura &middot; Sistema de Gestión Ciudadana</p>
           </div>
         </div>
-
-        {/* Chip institucional en el pie de la card */}
-        <div
-          className="px-7 pb-5 flex items-center justify-center gap-2"
-        >
-          {/* Chips de colores institucionales */}
-          <span
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-medium"
-            style={{
-              background: 'var(--inst-blue-light)',
-              border: '1px solid var(--inst-blue-border)',
-              color: 'var(--inst-blue)',
-            }}
-          >
-            <span className="w-1 h-1 rounded-full" style={{ background: 'var(--inst-blue)' }} />
-            Portal Municipal
-          </span>
-          <span
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-medium"
-            style={{
-              background: 'var(--inst-lime-light)',
-              border: '1px solid var(--inst-lime-border)',
-              color: '#7a8504',
-            }}
-          >
-            <span className="w-1 h-1 rounded-full" style={{ background: 'var(--inst-lime)' }} />
-            Atención 24/7
-          </span>
-          <span
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-medium"
-            style={{
-              background: 'var(--inst-magenta-light)',
-              border: '1px solid var(--inst-magenta-border)',
-              color: 'var(--inst-magenta)',
-            }}
-          >
-            <span className="w-1 h-1 rounded-full" style={{ background: 'var(--inst-magenta)' }} />
-            Vitacura
-          </span>
-        </div>
       </div>
-
-      {/* Footer debajo del card */}
-      <p className="absolute bottom-4 left-0 right-0 text-center text-[11px] text-white/50">
-        © 2025 Municipalidad de Vitacura · Portal de Atención Digital
-      </p>
     </div>
   );
 }
