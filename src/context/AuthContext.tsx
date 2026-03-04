@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-interface User {
+export interface User {
   id?: number;
   name: string;
   email?: string;
@@ -26,14 +26,10 @@ export function useAuth() {
   return ctx;
 }
 
-export { API_URL };
-
-// Helper: convierte cualquier formato de error de FastAPI a string legible
 function parseError(err: any, fallback: string): string {
   if (!err) return fallback;
   if (typeof err.detail === 'string') return err.detail;
   if (Array.isArray(err.detail)) {
-    // Errores de validación de Pydantic: [{loc, msg, type}]
     return err.detail.map((d: any) => d.msg || JSON.stringify(d)).join(' · ');
   }
   if (err.message) return err.message;
@@ -84,7 +80,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('vita360_user', JSON.stringify(userData));
   };
 
-  const register = async (name: string, email: string, password: string, role: 'ciudadano' | 'operador') => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    role: 'ciudadano' | 'operador'
+  ) => {
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
