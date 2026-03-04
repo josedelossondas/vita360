@@ -98,6 +98,18 @@ export function OperadorPage() {
   const [assigning, setAssigning] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [expandedEvidences, setExpandedEvidences] = useState<number | null>(null);
+  const [iaLogs, setIaLogs] = useState<Map<number, any>>(new Map());
+
+  // Cargar métricas IA desde localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('vita360_ia_logs_v1');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+      setIaLogs(new Map(parsed.filter((l: any) => l.metrics).map((l: any) => [l.id, l])));
+    } catch { }
+  }, [selectedTicket]);
 
   const fetchTickets = async (): Promise<Ticket[]> => {
     if (!token) return [];
@@ -345,6 +357,32 @@ export function OperadorPage() {
               </div>
               <h2 className="text-[14px] font-semibold mb-1" style={{ color: "#1e293b" }}>{selectedTicket.title}</h2>
               <p className="text-[12.5px]" style={{ color: "#64748b" }}>{selectedTicket.description}</p>
+
+              {/* Métricas IA */}
+              {(() => {
+                const log = iaLogs.get(selectedTicket.id);
+                if (!log?.metrics) return null;
+                const pBarColor = (v: number) => v >= 85 ? '#ef4444' : v >= 65 ? '#f59e0b' : v >= 45 ? '#2596be' : '#16a34a';
+                return (
+                  <div className="mt-3 rounded-xl border p-3" style={{ background: 'rgba(37,150,190,0.04)', borderColor: 'rgba(37,150,190,0.12)' }}>
+                    <div className="text-[10.5px] uppercase tracking-wide font-medium mb-2" style={{ color: '#94a3b8' }}>Métricas IA · {log.priority_score ?? '—'}% – {log.priority_label ?? ''}</div>
+                    <div className="space-y-1.5">
+                      {Object.entries(log.metrics as Record<string, number>).map(([key, val]) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <span className="text-[11px] w-24 flex-shrink-0" style={{ color: '#64748b' }}>{key}</span>
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.07)' }}>
+                            <div className="h-full rounded-full" style={{ width: `${val}%`, background: pBarColor(val) }} />
+                          </div>
+                          <span className="text-[10.5px] font-mono w-8 text-right" style={{ color: '#94a3b8' }}>{val}</span>
+                          {log.weights?.[key] !== undefined && (
+                            <span className="text-[10px]" style={{ color: '#c0cf05' }}>w={log.weights[key].toFixed(2)}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Detalles */}
@@ -443,7 +481,24 @@ export function OperadorPage() {
               )}
             </div>
 
-            {/* Evidencias */}
+            {/* Foto principal bajo línea de tiempo */}
+            {selectedTicket.evidences?.length > 0 && selectedTicket.evidences[0].image_url && (
+              <div>
+                <div className="text-[10.5px] uppercase tracking-wide mb-2" style={{ color: '#94a3b8' }}>Foto adjunta</div>
+                <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(37,150,190,0.12)' }}>
+                  <img
+                    src={selectedTicket.evidences[0].image_url}
+                    alt="Evidencia"
+                    className="w-full"
+                    style={{ objectFit: 'contain', maxHeight: '380px', background: 'rgba(0,0,0,0.03)' }}
+                    loading="lazy"
+                  />
+                </div>
+                {selectedTicket.evidences[0].description && (
+                  <p className="mt-1.5 text-[11.5px]" style={{ color: '#64748b' }}>{selectedTicket.evidences[0].description}</p>
+                )}
+              </div>
+            )}
             {selectedTicket.evidences?.length > 0 && (
               <>
                 <div className="h-px" style={{ background: "rgba(37,150,190,0.1)" }} />

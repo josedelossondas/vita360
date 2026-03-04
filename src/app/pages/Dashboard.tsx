@@ -1,9 +1,8 @@
 /**
  * Dashboard — Panel principal del operador Vita360
- * Basado en vita360-main con estética glassmorphism Vitacura
  */
 
-import { MapPin, FileQuestion, ChevronDown, X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, FileQuestion, ChevronDown, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { useFleetStream } from '../../hooks/useFleetStream';
@@ -24,12 +23,20 @@ interface DashboardStats {
     avg_response_time: string; tickets_at_risk: number;
 }
 type SortColumn = 'priority' | 'date' | 'status' | 'area' | 'id' | 'title';
-type DatePreset = 'all' | 'hour' | 'today' | '7d' | '30d' | 'custom';
-interface DateRange { preset: DatePreset; from: Date | null; to: Date | null; }
 
 const STATUS_LIST = ['Recibido', 'Asignado', 'En Gestión', 'Resuelto', 'Cerrado'];
+const URGENCY_LIST = ['Alta', 'Media', 'Baja'];
 
-// ── Color helpers con paleta Vitacura ─────────────────────────────────────────
+// ── Hardcoded cameras for Vitacura ─────────────────────────────────────────────
+const CAMERAS = [
+    { id: 'CAM-01', name: 'Av. Bicentenario / El Cerro', lat: -33.3800, lon: -70.5767, gif: 'https://media.giphy.com/media/l0IyjiXOXTX6Yemsg/giphy.gif' },
+    { id: 'CAM-02', name: 'Av. Kennedy / El Bosque Norte', lat: -33.3990, lon: -70.5820, gif: 'https://media.giphy.com/media/26hitlqT7PFTCp7ok/giphy.gif' },
+    { id: 'CAM-03', name: 'Av. Vitacura / Alonso de Córdova', lat: -33.3940, lon: -70.5700, gif: 'https://media.giphy.com/media/3o7TKSjXH1SXUA3IVy/giphy.gif' },
+    { id: 'CAM-04', name: 'Av. Las Condes / Tabancura', lat: -33.3860, lon: -70.5560, gif: 'https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif' },
+    { id: 'CAM-05', name: 'Rosario Norte / Kennedy', lat: -33.4020, lon: -70.5660, gif: 'https://media.giphy.com/media/l41YkFIiBxQdRlMnS/giphy.gif' },
+];
+
+// ── Color helpers ─────────────────────────────────────────────────────────────
 const statusColor = (s: string) => {
     switch (s?.toLowerCase()) {
         case 'resuelto': return { bg: 'rgba(192,207,5,0.12)', text: '#7a8504', border: 'rgba(192,207,5,0.3)' };
@@ -113,92 +120,17 @@ function MultiSelect({ id, openId, setOpenId, label, options, selected, onChange
     );
 }
 
-// ── Mini Calendar ─────────────────────────────────────────────────────────────
-const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-const DAYS_ES = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
-
-function MiniCalendar({ id, openId, setOpenId, dateRange, setDateRange }: {
-    id: string; openId: string | null; setOpenId: (id: string | null) => void;
-    dateRange: DateRange; setDateRange: (r: DateRange) => void;
-}) {
-    const open = openId === id;
-    const ref = useRef<HTMLDivElement>(null);
-    const [calYear, setCalYear] = useState(new Date().getFullYear());
-    const [calMonth, setCalMonth] = useState(new Date().getMonth());
-    const [selectingFrom, setSelectingFrom] = useState(true);
-    useEffect(() => {
-        const h = (e: MouseEvent) => { if (open && ref.current && !ref.current.contains(e.target as Node)) setOpenId(null); };
-        document.addEventListener('mousedown', h);
-        return () => document.removeEventListener('mousedown', h);
-    }, [open]);
-    const applyPreset = (preset: DatePreset) => {
-        const now = new Date();
-        if (preset === 'all') { setDateRange({ preset: 'all', from: null, to: null }); setOpenId(null); return; }
-        if (preset === 'hour') { setDateRange({ preset: 'hour', from: new Date(now.getTime() - 3600000), to: now }); setOpenId(null); return; }
-        if (preset === 'today') { const s = new Date(now.getFullYear(), now.getMonth(), now.getDate()); setDateRange({ preset: 'today', from: s, to: now }); setOpenId(null); return; }
-        if (preset === '7d') { setDateRange({ preset: '7d', from: new Date(now.getTime() - 7 * 86400000), to: now }); setOpenId(null); return; }
-        if (preset === '30d') { setDateRange({ preset: '30d', from: new Date(now.getTime() - 30 * 86400000), to: now }); setOpenId(null); return; }
-        setDateRange({ preset: 'custom', from: null, to: null }); setSelectingFrom(true);
-    };
-    const handleDayClick = (day: Date) => {
-        if (selectingFrom) { setDateRange({ preset: 'custom', from: day, to: null }); setSelectingFrom(false); }
-        else {
-            const from = dateRange.from!;
-            setDateRange({ preset: 'custom', from: day < from ? day : from, to: day < from ? from : day });
-            setSelectingFrom(true); setOpenId(null);
-        }
-    };
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const firstDay = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
-    const days: (Date | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => new Date(calYear, calMonth, i + 1))];
-    const isSame = (a: Date | null, b: Date | null) => a && b && a.toDateString() === b.toDateString();
-    const inRange = (d: Date | null) => d && dateRange.from && dateRange.to && d >= dateRange.from && d <= dateRange.to;
-    const presetLabel: Record<DatePreset, string> = { all: 'Todas', hour: 'Última hora', today: 'Hoy', '7d': '7 días', '30d': '30 días', custom: 'Personalizado' };
-    const label = dateRange.preset === 'custom' && dateRange.from
-        ? `${dateRange.from.toLocaleDateString('es-CL')}${dateRange.to ? ` – ${dateRange.to.toLocaleDateString('es-CL')}` : ' …'}`
-        : presetLabel[dateRange.preset];
+// ── Toggle button ─────────────────────────────────────────────────────────────
+function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
     return (
-        <div className="relative" ref={ref}>
-            <button type="button" onClick={() => setOpenId(open ? null : id)}
-                className="px-3 py-1.5 rounded-full border text-[12px] inline-flex items-center gap-1.5 transition-colors"
-                style={{ background: dateRange.preset !== 'all' ? 'rgba(37,150,190,0.08)' : 'rgba(255,255,255,0.7)', borderColor: dateRange.preset !== 'all' ? 'rgba(37,150,190,0.3)' : 'rgba(37,150,190,0.15)', color: dateRange.preset !== 'all' ? '#2596be' : '#64748b' }}>
-                <Calendar size={12} /><span>{label}</span>
-                <ChevronDown size={11} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-            </button>
-            {open && (
-                <div className="absolute right-0 mt-1.5 w-[260px] rounded-xl shadow-xl z-50 p-3"
-                    style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)', border: '1px solid rgba(37,150,190,0.12)' }}>
-                    <div className="grid grid-cols-3 gap-1 mb-3">
-                        {(['hour', 'today', '7d', '30d', 'all'] as DatePreset[]).map(p => (
-                            <button key={p} type="button" onClick={() => applyPreset(p)}
-                                className="px-2 py-1 rounded-lg text-[11px] border transition-colors text-center"
-                                style={{ background: dateRange.preset === p ? 'rgba(37,150,190,0.1)' : 'transparent', borderColor: dateRange.preset === p ? '#2596be' : 'rgba(0,0,0,0.1)', color: dateRange.preset === p ? '#2596be' : '#64748b' }}>
-                                {presetLabel[p]}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="border-t pt-3" style={{ borderColor: 'rgba(37,150,190,0.1)' }}>
-                        <div className="flex items-center justify-between mb-2">
-                            <button type="button" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }} className="p-1 rounded-lg hover:bg-gray-100"><ChevronLeft size={14} /></button>
-                            <span className="text-[12.5px] font-medium" style={{ color: '#1e293b' }}>{MONTHS_ES[calMonth]} {calYear}</span>
-                            <button type="button" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }} className="p-1 rounded-lg hover:bg-gray-100"><ChevronRight size={14} /></button>
-                        </div>
-                        <div className="grid grid-cols-7 gap-0.5">
-                            {DAYS_ES.map(d => <div key={d} className="text-[10px] text-center py-1 font-medium" style={{ color: '#94a3b8' }}>{d}</div>)}
-                            {days.map((d, i) => (
-                                <div key={i} className="aspect-square">
-                                    {d ? <button type="button" onClick={() => handleDayClick(d)}
-                                        className="w-full h-full rounded-lg text-[11.5px] transition-colors"
-                                        style={{ background: isSame(d, dateRange.from) || isSame(d, dateRange.to) ? '#2596be' : inRange(d) ? 'rgba(37,150,190,0.1)' : 'transparent', color: isSame(d, dateRange.from) || isSame(d, dateRange.to) ? 'white' : inRange(d) ? '#2596be' : '#1e293b' }}>
-                                        {d.getDate()}
-                                    </button> : <div />}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+        <button type="button" onClick={() => onChange(!value)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12px] transition-all"
+            style={{ background: value ? 'rgba(37,150,190,0.08)' : 'rgba(255,255,255,0.7)', borderColor: 'rgba(37,150,190,0.2)', color: value ? '#2596be' : '#64748b' }}>
+            {label}
+            <div className="relative w-8 h-4 rounded-full transition-colors" style={{ background: value ? '#2596be' : 'rgba(0,0,0,0.15)' }}>
+                <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform" style={{ transform: value ? 'translateX(17px)' : 'translateX(2px)' }} />
+            </div>
+        </button>
     );
 }
 
@@ -209,21 +141,34 @@ function makePatrolIcon() {
 function makeSuspectIcon() {
     return L.divIcon({ html: `<div style="width:26px;height:26px;border-radius:50%;background:#EF4444;border:2.5px solid #991B1B;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;font-family:sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.35)">S</div>`, className: '', iconSize: [26, 26] as [number, number], iconAnchor: [13, 13] as [number, number], popupAnchor: [0, -16] as [number, number] });
 }
+function makeCameraIcon() {
+    return L.divIcon({
+        html: `<div style="width:30px;height:30px;border-radius:8px;background:#1e293b;border:2px solid #2596be;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4);font-size:15px">📷</div>`,
+        className: '', iconSize: [30, 30] as [number, number], iconAnchor: [15, 15] as [number, number], popupAnchor: [0, -18] as [number, number]
+    });
+}
 
 // ── Map Component ─────────────────────────────────────────────────────────────
-function MapComponent({ tickets, fleetVehicles, fleetTick, selectedStatuses, setSelectedStatuses, selectedAreas, setSelectedAreas, dateRange, setDateRange }: {
-    tickets: Ticket[]; fleetVehicles: FleetVehicle[]; fleetTick: number;
+function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedStatuses,
+    selectedAreas, setSelectedAreas, mapUrgencies, setMapUrgencies,
+    showTickets, setShowTickets, showCameras, setShowCameras, showVehicles, setShowVehicles,
+}: {
+    tickets: Ticket[]; fleetVehicles: FleetVehicle[];
     selectedStatuses: string[]; setSelectedStatuses: (fn: (prev: string[]) => string[]) => void;
     selectedAreas: string[]; setSelectedAreas: (fn: (prev: string[]) => string[]) => void;
-    dateRange: DateRange; setDateRange: (r: DateRange) => void;
+    mapUrgencies: string[]; setMapUrgencies: (fn: (prev: string[]) => string[]) => void;
+    showTickets: boolean; setShowTickets: (v: boolean) => void;
+    showCameras: boolean; setShowCameras: (v: boolean) => void;
+    showVehicles: boolean; setShowVehicles: (v: boolean) => void;
 }) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<any>(null);
     const leafletReady = useRef(false);
     const fleetMarkers = useRef<Map<string, any>>(new Map());
+    const ticketMarkers = useRef<any[]>([]);
+    const cameraMarkers = useRef<Map<string, any>>(new Map());
     const suspectTrail = useRef<[number, number][]>([]);
     const suspectPolyline = useRef<any>(null);
-    const [showVehicles, setShowVehicles] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const allAreas = useMemo(() => Array.from(new Set(tickets.map(t => t.area_name).filter(Boolean))).sort(), [tickets]);
     const suspectVisible = fleetVehicles.some(v => v.type === 'suspect');
@@ -233,7 +178,13 @@ function MapComponent({ tickets, fleetVehicles, fleetTick, selectedStatuses, set
     useEffect(() => {
         if (!leafletReady.current) return;
         const map = mapInstance.current; if (!map) return;
-        if (!showVehicles) { for (const m of fleetMarkers.current.values()) map.removeLayer(m); fleetMarkers.current.clear(); suspectTrail.current = []; if (suspectPolyline.current) { map.removeLayer(suspectPolyline.current); suspectPolyline.current = null; } return; }
+        if (!showVehicles) {
+            for (const m of fleetMarkers.current.values()) map.removeLayer(m);
+            fleetMarkers.current.clear();
+            suspectTrail.current = [];
+            if (suspectPolyline.current) { map.removeLayer(suspectPolyline.current); suspectPolyline.current = null; }
+            return;
+        }
         const seenIds = new Set<string>();
         for (const v of fleetVehicles) {
             seenIds.add(v.id);
@@ -250,57 +201,109 @@ function MapComponent({ tickets, fleetVehicles, fleetTick, selectedStatuses, set
         for (const [id, m] of fleetMarkers.current) { if (!seenIds.has(id)) { map.removeLayer(m); fleetMarkers.current.delete(id); } }
     }, [fleetVehicles, showVehicles]);
 
-    // Init Leaflet
+    // Ticket markers
+    useEffect(() => {
+        if (!leafletReady.current) return;
+        const map = mapInstance.current; if (!map) return;
+        // Remove old
+        for (const m of ticketMarkers.current) map.removeLayer(m);
+        ticketMarkers.current = [];
+        if (!showTickets) return;
+        const urgencyColors: Record<string, string> = { Alta: '#b82c87', Media: '#f59e0b', Baja: '#2596be' };
+        const visible = tickets.filter(t => {
+            if (!t.lat || !t.lon) return false;
+            if (mapUrgencies.length > 0 && !mapUrgencies.includes(t.urgency_level)) return false;
+            return true;
+        });
+        visible.forEach(t => {
+            const color = urgencyColors[t.urgency_level] || '#2596be';
+            const m = L.marker([t.lat!, t.lon!], {
+                icon: L.divIcon({ html: `<div style="width:22px;height:22px;background:${color};border-radius:50%;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.2)"></div>`, className: '', iconSize: [22, 22] as [number, number], iconAnchor: [11, 11] as [number, number] })
+            }).bindPopup(`<div style="font-family:system-ui;font-size:13px;width:210px"><div style="font-weight:600;margin-bottom:4px">${t.title}</div><div style="color:#6B7280;font-size:12px">${t.area_name || 'Sin área'} · ${t.urgency_level || '—'}</div></div>`, { maxWidth: 240 }).addTo(map);
+            ticketMarkers.current.push(m);
+        });
+    }, [tickets, showTickets, mapUrgencies]);
+
+    // Camera markers
+    useEffect(() => {
+        if (!leafletReady.current) return;
+        const map = mapInstance.current; if (!map) return;
+        if (!showCameras) {
+            for (const m of cameraMarkers.current.values()) map.removeLayer(m);
+            cameraMarkers.current.clear();
+            return;
+        }
+        for (const cam of CAMERAS) {
+            if (cameraMarkers.current.has(cam.id)) continue;
+            const popup = `<div style="font-family:system-ui;width:260px;padding:4px 0">
+              <div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:6px">📷 ${cam.id} — ${cam.name}</div>
+              <img src="${cam.gif}" alt="${cam.id}" style="width:100%;border-radius:8px;border:1px solid rgba(0,0,0,0.1)" />
+              <div style="font-size:10px;color:#94a3b8;margin-top:4px;text-align:center">Simulación en tiempo real</div>
+            </div>`;
+            const m = L.marker([cam.lat, cam.lon], { icon: makeCameraIcon() }).bindPopup(popup, { maxWidth: 280 }).addTo(map);
+            cameraMarkers.current.set(cam.id, m);
+        }
+    }, [showCameras]);
+
+    // Init Leaflet (Voyager tiles = colorful streets)
     useEffect(() => {
         if (mapInstance.current || !mapRef.current) return;
         const map = L.map(mapRef.current).setView([-33.383, -70.58], 13);
         mapInstance.current = map; leafletReady.current = true;
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20 }).addTo(map);
-        const urgencyColors: Record<string, string> = { Alta: '#b82c87', Media: '#f59e0b', Baja: '#2596be' };
-        tickets.forEach(t => {
-            if (!t.lat || !t.lon) return;
-            const color = urgencyColors[t.urgency_level] || '#2596be';
-            L.marker([t.lat, t.lon], { icon: L.divIcon({ html: `<div style="width:22px;height:22px;background:${color};border-radius:50%;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.2)"></div>`, className: '', iconSize: [22, 22] as [number, number], iconAnchor: [11, 11] as [number, number] }) })
-                .bindPopup(`<div style="font-family:system-ui;font-size:13px;width:210px"><div style="font-weight:600;margin-bottom:4px">${t.title}</div><div style="color:#6B7280;font-size:12px">${t.area_name || 'Sin área'} · ${t.urgency_level || '—'}</div></div>`, { maxWidth: 240 }).addTo(map);
-        });
-        return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; leafletReady.current = false; fleetMarkers.current.clear(); suspectTrail.current = []; suspectPolyline.current = null; } };
-    }, [tickets]);
+        // Voyager = streets with colors (like the tickets map in OperadorPage)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20
+        }).addTo(map);
+        return () => {
+            if (mapInstance.current) {
+                mapInstance.current.remove(); mapInstance.current = null; leafletReady.current = false;
+                fleetMarkers.current.clear(); ticketMarkers.current = []; cameraMarkers.current.clear();
+                suspectTrail.current = []; suspectPolyline.current = null;
+            }
+        };
+    }, []);
 
     return (
         <div className="rounded-2xl border mb-6 overflow-hidden"
             style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(37,150,190,0.1)', boxShadow: '0 4px 24px rgba(37,150,190,0.08)' }}>
             <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, #2596be 0%, #c0cf05 50%, #b82c87 100%)' }} />
+
+            {/* ── Barra de filtros ── */}
             <div className="relative z-[1001] px-5 py-3 border-b" style={{ borderColor: 'rgba(37,150,190,0.08)' }}>
                 <div className="flex items-center justify-between flex-wrap gap-2">
+                    {/* Título */}
                     <div className="flex items-center gap-2">
                         <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(37,150,190,0.1)' }}><MapPin size={16} style={{ color: '#2596be' }} /></span>
-                        <span className="text-[14px] font-semibold" style={{ color: '#1e293b' }}>VITwin — Mapa en tiempo real</span>
-                        {fleetTick > 0 && <span className="px-2 py-0.5 rounded-md text-[11px] font-mono" style={{ background: 'rgba(0,0,0,0.05)', color: '#94a3b8' }}>tick #{fleetTick}</span>}
-                        {patrolCount > 0 && <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border" style={{ background: 'rgba(251,191,36,0.1)', color: '#b45309', borderColor: 'rgba(251,191,36,0.3)' }}>{patrolCount} patrullas</span>}
-                        {suspectVisible && <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border flex items-center gap-1" style={{ background: 'rgba(239,68,68,0.05)', color: '#dc2626', borderColor: 'rgba(239,68,68,0.2)' }}><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />Sospechoso</span>}
+                        <span className="text-[14px] font-semibold" style={{ color: '#1e293b' }}>VITwin</span>
                     </div>
+                    {/* Filtros */}
                     <div className="flex items-center gap-2 flex-wrap">
                         <MultiSelect id="ms-status" openId={openDropdown} setOpenId={setOpenDropdown} label="Estado" options={STATUS_LIST} selected={selectedStatuses} onChange={setSelectedStatuses} />
                         <MultiSelect id="ms-area" openId={openDropdown} setOpenId={setOpenDropdown} label="Área" options={allAreas} selected={selectedAreas} onChange={setSelectedAreas} />
-                        <MiniCalendar id="mc-date" openId={openDropdown} setOpenId={setOpenDropdown} dateRange={dateRange} setDateRange={setDateRange} />
-                        <button type="button" onClick={() => setShowVehicles(v => !v)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12px]"
-                            style={{ background: showVehicles ? 'rgba(37,150,190,0.08)' : 'rgba(255,255,255,0.7)', borderColor: 'rgba(37,150,190,0.2)', color: showVehicles ? '#2596be' : '#64748b' }}>
-                            Vehículos
-                            <div className="relative w-8 h-4 rounded-full transition-colors" style={{ background: showVehicles ? '#2596be' : 'rgba(0,0,0,0.15)' }}>
-                                <div className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform" style={{ transform: showVehicles ? 'translateX(17px)' : 'translateX(2px)' }} />
-                            </div>
-                        </button>
+                        <MultiSelect id="ms-urgency-map" openId={openDropdown} setOpenId={setOpenDropdown} label="Urgencia" options={URGENCY_LIST} selected={mapUrgencies} onChange={setMapUrgencies} />
+                        <Toggle label="Tickets" value={showTickets} onChange={setShowTickets} />
+                        <Toggle label="Cámaras" value={showCameras} onChange={setShowCameras} />
+                        <Toggle label="Vehículos" value={showVehicles} onChange={setShowVehicles} />
                     </div>
                 </div>
+
+                {/* Patrullas / sospechoso — debajo de filtros */}
+                {(patrolCount > 0 || suspectVisible) && (
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {patrolCount > 0 && <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border" style={{ background: 'rgba(251,191,36,0.1)', color: '#b45309', borderColor: 'rgba(251,191,36,0.3)' }}>{patrolCount} patrullas</span>}
+                        {suspectVisible && <span className="px-2 py-0.5 rounded-full text-[11px] font-medium border flex items-center gap-1" style={{ background: 'rgba(239,68,68,0.05)', color: '#dc2626', borderColor: 'rgba(239,68,68,0.2)' }}><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />Sospechoso activo</span>}
+                    </div>
+                )}
             </div>
-            <div ref={mapRef} style={{ width: '100%', height: 400 }} />
+
+            <div ref={mapRef} style={{ width: '100%', height: 420 }} />
+
+            {/* Leyenda — solo urgencias + cámara */}
             <div className="flex gap-4 px-5 py-2 text-[11.5px]" style={{ color: '#94a3b8' }}>
-                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#FBBF24', border: '2px solid #1E40AF' }} />Patrulla</span>
-                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block bg-red-500 border-2 border-red-800" />Sospechoso</span>
                 <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#b82c87' }} />Alta urgencia</span>
                 <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#f59e0b' }} />Media</span>
                 <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#2596be' }} />Baja</span>
+                <span className="flex items-center gap-1.5"><span className="text-[14px]">📷</span>Cámara</span>
             </div>
         </div>
     );
@@ -311,6 +314,20 @@ function TicketDetailPanel({ ticket, onClose }: { ticket: Ticket; onClose: () =>
     const ORDER: Record<string, number> = { Recibido: 0, Asignado: 1, 'En Gestión': 2, Resuelto: 3, Cerrado: 4 };
     const currentIdx = ORDER[ticket.status] ?? 0;
     const sc = statusColor(ticket.status); const uc = urgencyColor(ticket.urgency_level);
+
+    // Load IA metrics from localStorage
+    const iaLog = useMemo(() => {
+        try {
+            const raw = localStorage.getItem('vita360_ia_logs_v1');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return null;
+            return parsed.find((l: any) => l.id === ticket.id && l.metrics) ?? null;
+        } catch { return null; }
+    }, [ticket.id]);
+
+    const pBarColor = (v: number) => v >= 85 ? '#ef4444' : v >= 65 ? '#f59e0b' : v >= 45 ? '#2596be' : '#16a34a';
+
     return (
         <div className="rounded-2xl border p-5 sticky top-6 max-h-[calc(100vh-120px)] overflow-y-auto"
             style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', borderColor: 'rgba(37,150,190,0.12)', boxShadow: '0 8px 32px rgba(37,150,190,0.1)' }}>
@@ -326,11 +343,35 @@ function TicketDetailPanel({ ticket, onClose }: { ticket: Ticket; onClose: () =>
             <h2 className="text-[14.5px] font-semibold mb-1.5" style={{ color: '#1e293b' }}>{ticket.title}</h2>
             {ticket.area_name && <span className="inline-block mb-3 px-2 py-0.5 rounded-md text-[11.5px] border" style={{ background: 'rgba(37,150,190,0.06)', color: '#64748b', borderColor: 'rgba(37,150,190,0.15)' }}>{ticket.area_name}</span>}
             <p className="text-[12.5px] whitespace-pre-line mb-4 leading-relaxed" style={{ color: '#64748b' }}>{ticket.description}</p>
+
             <div className="grid grid-cols-2 gap-3 mb-4 text-[12.5px]">
                 <div><div className="text-[10.5px] uppercase tracking-wide mb-0.5" style={{ color: '#94a3b8' }}>Creado</div><div style={{ color: '#1e293b' }}>{new Date(ticket.created_at).toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div></div>
                 {ticket.assigned_to && <div><div className="text-[10.5px] uppercase tracking-wide mb-0.5" style={{ color: '#94a3b8' }}>Equipo</div><div style={{ color: '#1e293b' }}>{ticket.assigned_to}</div></div>}
                 {typeof ticket._urgency_score === 'number' && <div><div className="text-[10.5px] uppercase tracking-wide mb-0.5" style={{ color: '#94a3b8' }}>Score IA</div><div className="font-mono" style={{ color: '#2596be' }}>{ticket._urgency_score}%</div></div>}
             </div>
+
+            {/* Métricas IA detalladas */}
+            {iaLog?.metrics && (
+                <div className="mb-4 rounded-xl border p-3" style={{ background: 'rgba(37,150,190,0.04)', borderColor: 'rgba(37,150,190,0.12)' }}>
+                    <div className="text-[10.5px] uppercase tracking-wide font-medium mb-2" style={{ color: '#94a3b8' }}>Métricas IA · {iaLog.priority_score ?? '—'}% — {iaLog.priority_label ?? ''}</div>
+                    <div className="space-y-1.5">
+                        {Object.entries(iaLog.metrics as Record<string, number>).map(([key, val]) => (
+                            <div key={key} className="flex items-center gap-2">
+                                <span className="text-[11px] w-24 flex-shrink-0" style={{ color: '#64748b' }}>{key}</span>
+                                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.07)' }}>
+                                    <div className="h-full rounded-full" style={{ width: `${val}%`, background: pBarColor(val) }} />
+                                </div>
+                                <span className="text-[10.5px] font-mono w-6 text-right" style={{ color: '#94a3b8' }}>{val}</span>
+                                {iaLog.weights?.[key] !== undefined && (
+                                    <span className="text-[10px]" style={{ color: '#c0cf05' }}>w{iaLog.weights[key].toFixed(2)}</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Línea de tiempo */}
             <div className="border-t pt-4 mb-4" style={{ borderColor: 'rgba(37,150,190,0.08)' }}>
                 <div className="text-[10.5px] uppercase tracking-wide mb-3" style={{ color: '#94a3b8' }}>Línea de tiempo</div>
                 <div className="space-y-2">
@@ -346,6 +387,20 @@ function TicketDetailPanel({ ticket, onClose }: { ticket: Ticket; onClose: () =>
                     })}
                 </div>
             </div>
+
+            {/* Foto de evidencia — ancho completo del panel */}
+            {ticket.evidences && ticket.evidences.length > 0 && ticket.evidences[0].image_url && (
+                <div className="border-t pt-4" style={{ borderColor: 'rgba(37,150,190,0.08)' }}>
+                    <div className="text-[10.5px] uppercase tracking-wide mb-2" style={{ color: '#94a3b8' }}>Foto adjunta</div>
+                    <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(37,150,190,0.12)' }}>
+                        <img src={ticket.evidences[0].image_url} alt="Evidencia" className="w-full"
+                            style={{ objectFit: 'contain', maxHeight: '340px', background: 'rgba(0,0,0,0.03)' }} loading="lazy" />
+                    </div>
+                    {ticket.evidences[0].description && (
+                        <p className="mt-1.5 text-[11.5px]" style={{ color: '#64748b' }}>{ticket.evidences[0].description}</p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
@@ -355,14 +410,16 @@ export function Dashboard() {
     const { token } = useAuth();
     const fleetData = useFleetStream();
     const fleetVehicles = fleetData?.vehicles ?? [];
-    const currentTick = fleetData?.tick ?? 0;
 
     const [sortColumn, setSortColumn] = useState<SortColumn>('priority');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
     const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
     const [selectedUrgencies, setSelectedUrgencies] = useState<string[]>([]);
-    const [dateRange, setDateRange] = useState<DateRange>({ preset: 'all', from: null, to: null });
+    const [mapUrgencies, setMapUrgencies] = useState<string[]>([]);
+    const [showTickets, setShowTickets] = useState(true);
+    const [showCameras, setShowCameras] = useState(true);
+    const [showVehicles, setShowVehicles] = useState(true);
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -385,24 +442,11 @@ export function Dashboard() {
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
-    const passesDateFilter = useCallback((created_at: string) => {
-        const { preset, from, to } = dateRange;
-        if (preset === 'all') return true;
-        const t = new Date(created_at).getTime(), now = Date.now();
-        if (preset === 'hour') return t >= now - 3600000;
-        if (preset === 'today') { const d = new Date(); return t >= new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
-        if (preset === '7d') return t >= now - 7 * 86400000;
-        if (preset === '30d') return t >= now - 30 * 86400000;
-        if (preset === 'custom') { if (from && t < from.getTime()) return false; if (to && t > to.getTime() + 86400000) return false; return true; }
-        return true;
-    }, [dateRange]);
-
     const filteredAndSorted = useMemo(() => {
         const f = tickets.filter(c => {
             if (selectedStatuses.length && !selectedStatuses.includes(c.status)) return false;
             if (selectedAreas.length && !selectedAreas.includes(c.area_name)) return false;
             if (selectedUrgencies.length && !selectedUrgencies.includes(c.urgency_level)) return false;
-            if (!passesDateFilter(c.created_at)) return false;
             return true;
         });
         f.sort((a, b) => {
@@ -418,7 +462,7 @@ export function Dashboard() {
             }
         });
         return f;
-    }, [sortColumn, sortDirection, selectedStatuses, selectedAreas, selectedUrgencies, passesDateFilter, tickets]);
+    }, [sortColumn, sortDirection, selectedStatuses, selectedAreas, selectedUrgencies, tickets]);
 
     const paginated = filteredAndSorted.slice((page - 1) * pageSize, page * pageSize);
     const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / pageSize));
@@ -461,10 +505,15 @@ export function Dashboard() {
             </div>
 
             {/* Mapa */}
-            <MapComponent tickets={tickets} fleetVehicles={fleetVehicles} fleetTick={currentTick}
+            <MapComponent
+                tickets={tickets} fleetVehicles={fleetVehicles}
                 selectedStatuses={selectedStatuses} setSelectedStatuses={setSelectedStatuses}
                 selectedAreas={selectedAreas} setSelectedAreas={setSelectedAreas}
-                dateRange={dateRange} setDateRange={setDateRange} />
+                mapUrgencies={mapUrgencies} setMapUrgencies={setMapUrgencies}
+                showTickets={showTickets} setShowTickets={setShowTickets}
+                showCameras={showCameras} setShowCameras={setShowCameras}
+                showVehicles={showVehicles} setShowVehicles={setShowVehicles}
+            />
 
             {/* Tabla + detalle */}
             <div className="flex gap-6 flex-col lg:flex-row">
@@ -479,7 +528,7 @@ export function Dashboard() {
                             <div className="flex items-center gap-2">
                                 <span>Urgencia:</span>
                                 <div className="flex gap-1">
-                                    {['Alta', 'Media', 'Baja'].map(level => (
+                                    {URGENCY_LIST.map(level => (
                                         <button key={level} type="button"
                                             onClick={() => setSelectedUrgencies(prev => prev.includes(level) ? prev.filter(u => u !== level) : [...prev, level])}
                                             className="px-2 py-1 rounded-full border text-[11px] transition-colors"

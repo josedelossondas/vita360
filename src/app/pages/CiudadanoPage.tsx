@@ -75,19 +75,20 @@ function UrgencyBadge({ level }: { level: string }) {
 }
 
 // ── Image resize helper ───────────────────────────────────────────────────────
-function resizeImage(file: File, maxSize = 480): Promise<string> {
+function resizeImage(file: File, maxSize = 800): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
+        // Always scale down if larger than maxSize; always convert to JPEG at 0.70 (30% compression)
         const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
         const w = Math.round(img.width * scale);
         const h = Math.round(img.height * scale);
         const canvas = document.createElement("canvas");
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        resolve(canvas.toDataURL("image/jpeg", 0.70));
       };
       img.onerror = reject;
       img.src = ev.target?.result as string;
