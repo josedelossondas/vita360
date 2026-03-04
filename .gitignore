@@ -7,7 +7,6 @@ build/
 *.log
 
 # Env
-.env
 .env.local
 
 # OS

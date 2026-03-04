@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Mic,
-  Phone,
   ChevronRight,
   HelpCircle,
   LogOut,
@@ -98,6 +97,78 @@ function resizeImage(file: File, maxSize = 480): Promise<string> {
   });
 }
 
+
+// ── Footer Vitacura ───────────────────────────────────────────────────────────
+function VitacuraFooter() {
+  return (
+    <footer className="w-full mt-16" style={{ background: '#ffffff', borderTop: '1px solid rgba(37,150,190,0.1)' }}>
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 items-start">
+          {/* Logo */}
+          <div className="flex items-center">
+            <img src={VITACURA_LOGO} alt="Municipalidad de Vitacura" className="h-10 object-contain"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          </div>
+          {/* Contacto */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#2596be' }}>Contacto</p>
+            <div className="space-y-2 text-[12.5px]" style={{ color: '#64748b' }}>
+              <div className="flex items-start gap-2">
+                <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.07 1.18 2 2 0 012.07 0h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.14 7.82a16 16 0 006.29 6.29l1.18-1.18a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 15v1.92z" /></svg>
+                <a href="tel:+56222402200" className="hover:text-[#2596be] transition-colors">2 2240 22 00</a>
+              </div>
+              <div className="flex items-start gap-2">
+                <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                <a href="mailto:atencionalvecino@vitacura.cl" className="hover:text-[#2596be] transition-colors">atencionalvecino@vitacura.cl</a>
+              </div>
+              <div className="flex items-start gap-2">
+                <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                <span>Av. Bicentenario 3800, Vitacura, Santiago</span>
+              </div>
+            </div>
+          </div>
+          {/* Síguenos */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: '#2596be' }}>Síguenos</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { href: 'https://www.facebook.com/MuniVitacura', svg: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg> },
+                { href: 'https://twitter.com/MuniVitacura', svg: <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg> },
+                { href: 'https://www.instagram.com/munivitacura', svg: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg> },
+                { href: 'https://www.youtube.com/munivitacura', svg: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg> },
+                { href: 'https://www.linkedin.com/company/municipalidad-de-vitacura', svg: <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg> },
+                { href: 'https://www.flickr.com/photos/munivitacura', svg: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="6.5" cy="12" r="4" /><circle cx="17.5" cy="12" r="4" /></svg> },
+              ].map(({ href, svg }, i) => (
+                <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center transition-all"
+                  style={{ background: 'rgba(37,150,190,0.07)', color: '#2596be' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(37,150,190,0.16)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(37,150,190,0.07)'; }}>
+                  {svg}
+                </a>
+              ))}
+            </div>
+          </div>
+          {/* Alcaldesa */}
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-bold border-2"
+              style={{ background: 'linear-gradient(135deg, rgba(37,150,190,0.15) 0%, rgba(184,44,135,0.1) 100%)', borderColor: 'rgba(37,150,190,0.2)', color: '#2596be' }}>
+              CM
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2596be' }}>Alcaldesa</p>
+              <p className="text-[13px] font-semibold" style={{ color: '#1e293b' }}>Camila Merino</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="border-t text-center py-4 text-[12px]" style={{ borderColor: 'rgba(37,150,190,0.08)', color: '#94a3b8' }}>
+        © Municipalidad de Vitacura
+      </div>
+    </footer>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export function CiudadanoPage() {
   const navigate = useNavigate();
@@ -186,30 +257,6 @@ export function CiudadanoPage() {
       {/* Orbs */}
       <div className="fixed top-0 right-0 w-96 h-96 pointer-events-none" style={{ background: "radial-gradient(circle, rgba(37,150,190,0.07) 0%, transparent 70%)", filter: "blur(60px)", zIndex: 0 }} />
       <div className="fixed bottom-0 left-0 w-72 h-72 pointer-events-none" style={{ background: "radial-gradient(circle, rgba(184,44,135,0.06) 0%, transparent 70%)", filter: "blur(60px)", zIndex: 0 }} />
-
-      {/* ── Franja institucional superior ── */}
-      <div className="w-full h-7 flex items-center px-4 sm:px-6 relative z-50"
-        style={{ background: "rgba(255,255,255,0.9)", borderBottom: "1px solid rgba(37,150,190,0.1)" }}>
-        <div className="flex items-center gap-3 text-[11px] w-full" style={{ color: "#64748b" }}>
-          <span className="flex items-center gap-1.5 font-semibold hidden sm:flex" style={{ color: "#2596be" }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#2596be" }} />
-            Municipalidad de Vitacura
-          </span>
-          <span className="hidden sm:inline" style={{ color: "rgba(100,116,139,0.3)" }}>|</span>
-          <a href="tel:+5622585700" className="flex items-center gap-1 hover:text-[#2596be] transition-colors">
-            <Phone className="w-2.5 h-2.5" /> (02) 2585 7000
-          </a>
-          <span style={{ color: "rgba(100,116,139,0.3)" }}>·</span>
-          <a href="https://vitacura.cl/atencion-vecinos" target="_blank" rel="noopener noreferrer"
-            className="hover:text-[#2596be] transition-colors hidden sm:inline">Atención al Vecino</a>
-          <a href="https://vitacura.cl" target="_blank" rel="noopener noreferrer"
-            className="ml-auto flex items-center gap-1 hover:text-[#2596be] transition-colors hidden sm:flex">
-            vitacura.cl
-          </a>
-        </div>
-      </div>
-      {/* Hairline tricolor */}
-      <div className="w-full h-0.5 relative z-50" style={{ background: "linear-gradient(90deg, #2596be 0%, #c0cf05 50%, #b82c87 100%)" }} />
 
       {/* ── Header sticky glass ── */}
       <header className="sticky top-0 z-40 w-full relative"
@@ -609,6 +656,7 @@ export function CiudadanoPage() {
           </div>
         )}
       </main>
+      <div className="relative z-10"><VitacuraFooter /></div>
     </div>
   );
 }

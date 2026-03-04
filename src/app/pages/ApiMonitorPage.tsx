@@ -1,15 +1,10 @@
 /**
- * /operador/api — Monitor de procesamiento de tickets en tiempo real
- *
- * Polling inteligente: solo descarga el CONTEO de tickets; cuando hay nuevos,
- * trae únicamente los recién llegados (sin imágenes) y los procesa con la IA.
+ * /operador/api — Monitor de procesamiento de tickets IA + vista de todos los tickets
  */
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth, API_URL } from '../../context/AuthContext';
-import { Activity, Zap, CheckCircle2, Clock, AlertCircle, RefreshCw } from 'lucide-react';
-
-const POLL_INTERVAL_MS = 8_000;
+import { Activity, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
 
 type ProcessingPhase = 'waiting' | 'classifying_area' | 'calculating_priority' | 'done' | 'error';
 
@@ -27,6 +22,17 @@ interface TicketLog {
     priority_score: number | null; priority_label: string | null;
     metrics: Record<string, number> | null; weights: Record<string, number> | null;
     error: string | null; started_at: Date; finished_at: Date | null;
+}
+
+interface AllTicket {
+    id: number;
+    title: string;
+    description: string;
+    urgency_level: string;
+    status: string;
+    priority_score: number;
+    area_name: string;
+    created_at: string;
 }
 
 async function classifyArea(title: string, description: string, token: string): Promise<string> {
@@ -58,7 +64,7 @@ function priorityTextColor(s: number) { if (s >= 85) return '#dc2626'; if (s >= 
 // ── Phase Badge ───────────────────────────────────────────────────────────────
 function PhaseBadge({ phase }: { phase: ProcessingPhase }) {
     const map: Record<ProcessingPhase, { label: string; bg: string; text: string; border: string; icon: React.ReactNode }> = {
-        waiting: { label: 'En cola', bg: 'rgba(100,116,139,0.08)', text: '#64748b', border: 'rgba(100,116,139,0.2)', icon: <Clock size={11} /> },
+        waiting: { label: 'En cola', bg: 'rgba(100,116,139,0.08)', text: '#64748b', border: 'rgba(100,116,139,0.2)', icon: <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#64748b' }} /> },
         classifying_area: { label: 'Definiendo área…', bg: 'rgba(37,150,190,0.1)', text: '#2596be', border: 'rgba(37,150,190,0.25)', icon: <span className="w-2 h-2 rounded-full inline-block animate-pulse" style={{ background: '#2596be' }} /> },
         calculating_priority: { label: 'Calculando prioridad…', bg: 'rgba(245,158,11,0.1)', text: '#b45309', border: 'rgba(245,158,11,0.3)', icon: <span className="w-2 h-2 rounded-full inline-block animate-pulse" style={{ background: '#f59e0b' }} /> },
         done: { label: 'Procesado', bg: 'rgba(192,207,5,0.1)', text: '#7a8504', border: 'rgba(192,207,5,0.3)', icon: <CheckCircle2 size={11} /> },
@@ -71,7 +77,23 @@ function PhaseBadge({ phase }: { phase: ProcessingPhase }) {
     );
 }
 
-// ── Ticket Log Card ───────────────────────────────────────────────────────────
+// ── Urgency badge ─────────────────────────────────────────────────────────────
+function UrgencyBadge({ level }: { level: string }) {
+    const map: Record<string, { bg: string; text: string; border: string }> = {
+        Alta: { bg: 'rgba(184,44,135,0.08)', text: '#b82c87', border: 'rgba(184,44,135,0.25)' },
+        Media: { bg: 'rgba(245,158,11,0.1)', text: '#b45309', border: 'rgba(245,158,11,0.25)' },
+        Baja: { bg: 'rgba(37,150,190,0.1)', text: '#2596be', border: 'rgba(37,150,190,0.2)' },
+    };
+    const c = map[level] || { bg: 'rgba(100,116,139,0.1)', text: '#475569', border: 'rgba(100,116,139,0.2)' };
+    return (
+        <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border"
+            style={{ background: c.bg, color: c.text, borderColor: c.border }}>
+            {level || '—'}
+        </span>
+    );
+}
+
+// ── Ticket Log Card (processing) ──────────────────────────────────────────────
 function TicketLogCard({ log }: { log: TicketLog }) {
     const elapsed = log.finished_at ? `${((log.finished_at.getTime() - log.started_at.getTime()) / 1000).toFixed(1)}s` : null;
     const borderColor = log.phase === 'done' ? 'rgba(192,207,5,0.25)' : log.phase === 'error' ? 'rgba(239,68,68,0.2)' : 'rgba(37,150,190,0.1)';
@@ -147,6 +169,48 @@ function TicketLogCard({ log }: { log: TicketLog }) {
     );
 }
 
+// ── All-Tickets mini card ──────────────────────────────────────────────────────
+function AllTicketCard({ ticket, log }: { ticket: AllTicket; log?: TicketLog }) {
+    const desc = ticket.description || ticket.title || '';
+    const truncated = desc.length > 90 ? desc.slice(0, 87) + '…' : desc;
+
+    // Metrics from the IA log if available
+    const metrics = log?.metrics ?? null;
+    const METRIC_KEYS = ['Urgencia', 'Impacto', 'Tiempo', 'Ciudadanos', 'Recursos'];
+
+    return (
+        <div className="rounded-xl border p-3 flex flex-col gap-2 transition-all duration-200"
+            style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(12px)', borderColor: 'rgba(37,150,190,0.1)', boxShadow: '0 2px 10px rgba(37,150,190,0.05)' }}>
+            {/* ID + urgencia */}
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-[11.5px] font-mono font-semibold" style={{ color: '#2596be' }}>#{ticket.id}</span>
+                <UrgencyBadge level={ticket.urgency_level} />
+            </div>
+            {/* Descripción */}
+            <p className="text-[11.5px] leading-snug" style={{ color: '#64748b' }}>{truncated}</p>
+            {/* Prioridades por área (5 métricas) */}
+            <div className="grid grid-cols-1 gap-1">
+                {METRIC_KEYS.map(key => {
+                    const val = metrics?.[key] ?? null;
+                    return (
+                        <div key={key} className="flex items-center gap-1.5">
+                            <span className="text-[10px] w-20 flex-shrink-0" style={{ color: '#94a3b8' }}>{key}</span>
+                            <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.07)' }}>
+                                {val !== null && (
+                                    <div className="h-full rounded-full" style={{ width: `${val}%`, background: priorityBarColor(val) }} />
+                                )}
+                            </div>
+                            <span className="text-[10px] font-mono w-6 text-right" style={{ color: '#94a3b8' }}>
+                                {val !== null ? val : '—'}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export function ApiMonitorPage() {
     const { token } = useAuth();
@@ -154,9 +218,19 @@ export function ApiMonitorPage() {
     const [isPolling, setIsPolling] = useState(true);
     const [lastChecked, setLastChecked] = useState<Date | null>(null);
     const [totalProcessed, setTotalProcessed] = useState(0);
+    const [allTickets, setAllTickets] = useState<AllTicket[]>([]);
 
     const knownCount = useRef<number | null>(null);
     const processingQueue = useRef<Set<number>>(new Set());
+
+    // Cargar todos los tickets existentes al montar
+    useEffect(() => {
+        if (!token) return;
+        fetch(`${API_URL}/tickets`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.ok ? r.json() : [])
+            .then((data: AllTicket[]) => setAllTickets(data))
+            .catch(() => { });
+    }, [token]);
 
     // Rehidratar logs desde localStorage
     useEffect(() => {
@@ -181,7 +255,7 @@ export function ApiMonitorPage() {
     const processTicket = async (ticket: { id: number; title: string; description: string }) => {
         if (processingQueue.current.has(ticket.id)) return;
         processingQueue.current.add(ticket.id);
-        setLogs(prev => [{ id: ticket.id, title: ticket.title, description: ticket.description, phase: 'classifying_area', area: null, priority_score: null, priority_label: null, metrics: null, weights: null, error: null, started_at: new Date(), finished_at: null }, ...prev].slice(0, 50));
+        setLogs(prev => [{ id: ticket.id, title: ticket.title, description: ticket.description, phase: 'classifying_area' as ProcessingPhase, area: null, priority_score: null, priority_label: null, metrics: null, weights: null, error: null, started_at: new Date(), finished_at: null }, ...prev].slice(0, 50));
         try {
             const areaName = await classifyArea(ticket.title, ticket.description, token!);
             setLogs(prev => prev.map(l => l.id === ticket.id ? { ...l, area: { area: areaName, color: areaColor(areaName) }, phase: 'calculating_priority' as ProcessingPhase } : l));
@@ -193,41 +267,44 @@ export function ApiMonitorPage() {
         } finally { processingQueue.current.delete(ticket.id); }
     };
 
+    // Verificación única al montar (sin intervalo)
     useEffect(() => {
         if (!token || !isPolling) return;
         const poll = async () => {
             try {
-                // Intenta obtener solo el conteo para minimizar datos
                 const countRes = await fetch(`${API_URL}/tickets/count`, { headers: { Authorization: `Bearer ${token}` } });
                 let currentCount: number;
                 if (countRes.ok) {
                     const cd = await countRes.json();
                     currentCount = typeof cd?.count === 'number' ? cd.count : Number(cd);
                 } else {
-                    // Fallback: pide lista completa pero solo para contar
                     const fb = await fetch(`${API_URL}/tickets`, { headers: { Authorization: `Bearer ${token}` } });
                     if (!fb.ok) return;
                     currentCount = (await fb.json()).length ?? 0;
                 }
                 setLastChecked(new Date());
-                // Primera llamada: inicializa base sin procesar nada
                 if (knownCount.current === null) { knownCount.current = currentCount; return; }
                 if (currentCount <= knownCount.current) return;
-                // Hay tickets nuevos → descarga solo los recientes (sin imágenes)
                 const diff = currentCount - knownCount.current;
                 const newRes = await fetch(`${API_URL}/tickets?limit=${diff}&offset=0&order=desc`, { headers: { Authorization: `Bearer ${token}` } });
                 if (!newRes.ok) return;
                 const newTickets: { id: number; title: string; description: string }[] = await newRes.json();
                 knownCount.current = currentCount;
+                // Also refresh all tickets list
+                fetch(`${API_URL}/tickets`, { headers: { Authorization: `Bearer ${token}` } })
+                    .then(r => r.ok ? r.json() : [])
+                    .then((data: AllTicket[]) => setAllTickets(data))
+                    .catch(() => { });
                 newTickets.forEach(t => processTicket(t));
             } catch { /* silently retry */ }
         };
         poll();
-        const interval = setInterval(poll, POLL_INTERVAL_MS);
-        return () => clearInterval(interval);
     }, [token, isPolling]);
 
     const activeCount = logs.filter(l => l.phase === 'classifying_area' || l.phase === 'calculating_priority').length;
+
+    // Build a log map by ticket id for quick lookup
+    const logMap = new Map(logs.map(l => [l.id, l]));
 
     return (
         <div>
@@ -242,15 +319,10 @@ export function ApiMonitorPage() {
                         <h1 className="text-[18px] font-semibold" style={{ color: '#1e293b' }}>Monitor de procesamiento IA</h1>
                     </div>
                     <p className="text-[13px] ml-10" style={{ color: '#94a3b8' }}>
-                        Tickets entrantes clasificados en tiempo real · IA ejecutándose en el backend
+                        Tickets entrantes clasificados en tiempo real
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => setLogs([])}
-                        className="px-3 py-1.5 rounded-xl text-[12.5px] transition-all border"
-                        style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'rgba(37,150,190,0.15)', color: '#64748b' }}>
-                        Limpiar log
-                    </button>
                     <button type="button" onClick={() => setIsPolling(p => !p)}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[12.5px] font-medium transition-all"
                         style={{
@@ -258,9 +330,9 @@ export function ApiMonitorPage() {
                             borderColor: isPolling ? 'rgba(192,207,5,0.3)' : 'rgba(239,68,68,0.2)',
                             color: isPolling ? '#7a8504' : '#dc2626',
                         }}>
-                        <span className="w-2 h-2 rounded-full" style={{ background: isPolling ? '#c0cf05' : '#ef4444', boxShadow: isPolling ? '0 0 6px rgba(192,207,5,0.6)' : 'none' }}
-                            {...(isPolling ? { className: 'w-2 h-2 rounded-full animate-pulse' } : {})} />
-                        {isPolling ? 'Escuchando' : 'Pausado'}
+                        <span className={`w-2 h-2 rounded-full${isPolling ? ' animate-pulse' : ''}`}
+                            style={{ background: isPolling ? '#c0cf05' : '#ef4444', boxShadow: isPolling ? '0 0 6px rgba(192,207,5,0.6)' : 'none' }} />
+                        {isPolling ? 'VIT activo' : 'Pausado'}
                     </button>
                 </div>
             </div>
@@ -270,8 +342,7 @@ export function ApiMonitorPage() {
                 {[
                     { label: 'Procesados esta sesión', value: totalProcessed, icon: <CheckCircle2 size={15} style={{ color: '#7a8504' }} />, accent: '#7a8504' },
                     { label: 'En proceso ahora', value: activeCount, icon: <Zap size={15} style={{ color: '#2596be' }} />, accent: '#2596be' },
-                    { label: 'Última verificación', value: lastChecked ? lastChecked.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—', icon: <RefreshCw size={15} style={{ color: '#94a3b8' }} />, accent: '#94a3b8' },
-                    { label: 'Intervalo polling', value: `${POLL_INTERVAL_MS / 1000}s`, icon: <Clock size={15} style={{ color: '#94a3b8' }} />, accent: '#94a3b8' },
+                    { label: 'Última verificación', value: lastChecked ? lastChecked.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—', icon: <Activity size={15} style={{ color: '#94a3b8' }} />, accent: '#94a3b8' },
                 ].map(s => (
                     <div key={s.label} className="rounded-2xl border p-4 flex-1 min-w-[160px] transition-all duration-300"
                         style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(37,150,190,0.1)', boxShadow: '0 4px 20px rgba(37,150,190,0.07)' }}>
@@ -281,24 +352,42 @@ export function ApiMonitorPage() {
                 ))}
             </div>
 
-            {/* Log */}
-            {logs.length === 0 ? (
-                <div className="rounded-2xl border p-16 text-center"
-                    style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', borderColor: 'rgba(37,150,190,0.1)', boxShadow: '0 4px 20px rgba(37,150,190,0.06)' }}>
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(37,150,190,0.08)' }}>
-                        <Activity size={24} style={{ color: '#94a3b8' }} />
+            {/* ── Todos los tickets (tarjetas pequeñas) ── */}
+            {allTickets.length > 0 && (
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, #2596be 0%, #c0cf05 50%, #b82c87 100%)' }} />
                     </div>
-                    <p className="text-[14px] font-medium mb-1" style={{ color: '#1e293b' }}>Esperando tickets nuevos</p>
-                    <p className="text-[12.5px]" style={{ color: '#94a3b8' }}>Cuando un ciudadano envíe un ticket, aparecerá aquí en tiempo real.</p>
-                    <p className="text-[11px] mt-2" style={{ color: 'rgba(148,163,184,0.7)' }}>
-                        Verificando cada {POLL_INTERVAL_MS / 1000}s · Solo descarga conteo, no imágenes
-                    </p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {logs.map(log => <TicketLogCard key={log.id} log={log} />)}
+                    <h2 className="text-[13.5px] font-semibold mb-3" style={{ color: '#1e293b' }}>
+                        Todos los tickets <span className="text-[12px] font-normal" style={{ color: '#94a3b8' }}>({allTickets.length})</span>
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {allTickets.map(ticket => (
+                            <AllTicketCard key={ticket.id} ticket={ticket} log={logMap.get(ticket.id)} />
+                        ))}
+                    </div>
                 </div>
             )}
+
+            {/* ── Log de procesamiento IA ── */}
+            <div>
+                <h2 className="text-[13.5px] font-semibold mb-3" style={{ color: '#1e293b' }}>
+                    Log de procesamiento IA
+                </h2>
+                {logs.length === 0 ? (
+                    <div className="rounded-2xl border p-16 text-center"
+                        style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', borderColor: 'rgba(37,150,190,0.1)', boxShadow: '0 4px 20px rgba(37,150,190,0.06)' }}>
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(37,150,190,0.08)' }}>
+                            <Activity size={24} style={{ color: '#94a3b8' }} />
+                        </div>
+                        <p className="text-[14px] font-medium mb-1" style={{ color: '#1e293b' }}>Esperando tickets nuevos</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {logs.map(log => <TicketLogCard key={log.id} log={log} />)}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
