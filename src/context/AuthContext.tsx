@@ -6,14 +6,14 @@ export interface User {
   id?: number;
   name: string;
   email?: string;
-  role: 'ciudadano' | 'operador';
+  role: 'ciudadano' | 'operador' | 'jefe_cuadrilla' | 'supervisor' | 'operator';
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: 'ciudadano' | 'operador') => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (name: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -78,13 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
     localStorage.setItem('vita360_token', data.access_token);
     localStorage.setItem('vita360_user', JSON.stringify(userData));
+    return userData;
   };
 
   const register = async (
     name: string,
     email: string,
     password: string,
-    role: 'ciudadano' | 'operador'
+    role: string
   ) => {
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',

@@ -5,6 +5,8 @@ import { OperadorPage } from "./pages/OperadorPage";
 import { Dashboard } from "./pages/Dashboard";
 import { ApiMonitorPage } from "./pages/ApiMonitorPage";
 import { LayoutOperador } from "./components/LayoutOperador";
+import { LayoutJefe } from "./components/LayoutJefe";
+import { JefeDashboard } from "./pages/JefeDashboard";
 import { useAuth } from "../context/AuthContext";
 
 function AppRedirect() {
@@ -20,7 +22,8 @@ function AppRedirect() {
     );
   }
   if (!user) return <Navigate to="/" replace />;
-  if (user.role === "operador") return <Navigate to="/operador" replace />;
+  if (user.role === "operador" || user.role === "supervisor" || user.role === "operator") return <Navigate to="/operador" replace />;
+  if (user.role === "jefe_cuadrilla") return <Navigate to="/jefe-cuadrilla" replace />;
   return <Navigate to="/ciudadano" replace />;
 }
 
@@ -36,8 +39,16 @@ function ProtectedOperadorLayout() {
   const { user, isLoading } = useAuth();
   if (isLoading) return null;
   if (!user) return <Navigate to="/" replace />;
-  if (user.role !== "operador") return <Navigate to="/ciudadano" replace />;
+  if (user.role !== "operador" && user.role !== "supervisor" && user.role !== "operator") return <Navigate to="/ciudadano" replace />;
   return <LayoutOperador />;
+}
+
+function ProtectedJefeLayout() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role !== "jefe_cuadrilla") return <Navigate to="/ciudadano" replace />;
+  return <LayoutJefe />;
 }
 
 export const router = createBrowserRouter([
@@ -52,6 +63,13 @@ export const router = createBrowserRouter([
       { index: true, Component: Dashboard },
       { path: "tickets", Component: OperadorPage },
       { path: "api", Component: ApiMonitorPage },
+    ],
+  },
+  {
+    path: "/jefe-cuadrilla",
+    Component: ProtectedJefeLayout,
+    children: [
+      { index: true, Component: JefeDashboard },
     ],
   },
 ]);

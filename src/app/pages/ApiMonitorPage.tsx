@@ -378,7 +378,7 @@ export function ApiMonitorPage() {
             );
             const candidatePool = areaSquads.length > 0 ? areaSquads : squads;
             const bestSquad = candidatePool.reduce(
-                (best, s) => s.pending_tasks < best.pending_tasks ? s : best,
+                (best, s) => (s.pending_tasks ?? 0) < (best.pending_tasks ?? 0) ? s : best,
                 candidatePool[0]
             );
 
@@ -386,7 +386,7 @@ export function ApiMonitorPage() {
                 await fetch(`${API_URL}/tickets/${ticket.id}/assign`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token!}` },
-                    body: JSON.stringify({ squad_name: bestSquad.name }),
+                    body: JSON.stringify({ squad_name: bestSquad.name, estimated_hours: estimatedHours }),
                 });
             }
 

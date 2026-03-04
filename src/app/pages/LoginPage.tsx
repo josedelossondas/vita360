@@ -15,7 +15,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"ciudadano" | "operador">("ciudadano");
+  const [role, setRole] = useState<"ciudadano" | "operador" | "jefe_cuadrilla">("ciudadano");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -29,8 +29,14 @@ export function LoginPage() {
     setLoading(true);
     try {
       if (tab === "login") {
-        await login(email.trim(), password);
-        navigate("/app");
+        const userData = await login(email.trim(), password);
+        if (userData?.role === "jefe_cuadrilla") {
+          navigate("/jefe-cuadrilla");
+        } else if (userData?.role === "operador" || userData?.role === "supervisor" || userData?.role === "operator") {
+          navigate("/app");
+        } else {
+          navigate("/");
+        }
       } else {
         await register(name.trim(), email.trim(), password, role);
         setSuccess("Cuenta creada. Ahora puedes iniciar sesión.");
@@ -159,7 +165,7 @@ export function LoginPage() {
               <div>
                 <label className="block mb-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>Tipo de Cuenta</label>
                 <div className="flex gap-2">
-                  {(["ciudadano", "operador"] as const).map((r) => (
+                  {(["ciudadano", "operador", "jefe_cuadrilla"] as const).map((r) => (
                     <button key={r} type="button" onClick={() => setRole(r)} className="flex-1 py-2 rounded-lg border text-xs transition-all duration-200"
                       style={{
                         borderColor: role === r ? "#2596be" : "rgba(37,150,190,0.15)",
@@ -167,7 +173,7 @@ export function LoginPage() {
                         color: role === r ? "#2596be" : "#64748b",
                         fontWeight: role === r ? 600 : 400,
                       }}>
-                      {r === "ciudadano" ? "Ciudadano" : "Operador"}
+                      {r === "ciudadano" ? "Ciudadano" : r === "operador" ? "Operador Muni" : "Jefe Cuadrilla"}
                     </button>
                   ))}
                 </div>

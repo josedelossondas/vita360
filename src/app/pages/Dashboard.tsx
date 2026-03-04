@@ -27,13 +27,22 @@ type SortColumn = 'priority' | 'date' | 'status' | 'area' | 'id' | 'title';
 const STATUS_LIST = ['Recibido', 'Asignado', 'En Gestión', 'Resuelto', 'Cerrado'];
 const URGENCY_LIST = ['Alta', 'Media', 'Baja'];
 
-// ── Hardcoded cameras for Vitacura ─────────────────────────────────────────────
+// ── Hardcoded cameras for Vitacura (YouTube streams) ───────────────────────────
 const CAMERAS = [
-    { id: 'CAM-01', name: 'Av. Bicentenario / El Cerro', lat: -33.3800, lon: -70.5767, gif: 'https://media.giphy.com/media/l0IyjiXOXTX6Yemsg/giphy.gif' },
-    { id: 'CAM-02', name: 'Av. Kennedy / El Bosque Norte', lat: -33.3990, lon: -70.5820, gif: 'https://media.giphy.com/media/26hitlqT7PFTCp7ok/giphy.gif' },
-    { id: 'CAM-03', name: 'Av. Vitacura / Alonso de Córdova', lat: -33.3940, lon: -70.5700, gif: 'https://media.giphy.com/media/3o7TKSjXH1SXUA3IVy/giphy.gif' },
-    { id: 'CAM-04', name: 'Av. Las Condes / Tabancura', lat: -33.3860, lon: -70.5560, gif: 'https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif' },
-    { id: 'CAM-05', name: 'Rosario Norte / Kennedy', lat: -33.4020, lon: -70.5660, gif: 'https://media.giphy.com/media/l41YkFIiBxQdRlMnS/giphy.gif' },
+    { id: 'CAM-01', name: 'Av. Bicentenario / El Cerro', lat: -33.3800, lon: -70.5767, yt_id: '_hElzf7C1D8' },
+    { id: 'CAM-02', name: 'Av. Kennedy / El Bosque Norte', lat: -33.3990, lon: -70.5820, yt_id: '5jPpMkg5daM' },
+    { id: 'CAM-03', name: 'Av. Vitacura / Alonso de Córdova', lat: -33.3940, lon: -70.5700, yt_id: '0pjFuk15b94' },
+    { id: 'CAM-04', name: 'Av. Las Condes / Tabancura', lat: -33.3860, lon: -70.5560, yt_id: 'RhdmP5017VM' },
+    { id: 'CAM-05', name: 'Rosario Norte / Kennedy', lat: -33.4020, lon: -70.5660, yt_id: '_hElzf7C1D8' },
+];
+
+// ── Polygon coordinates (lat, lon) ────────────────────────────────────────────
+const VITACURA_LATLNG = [
+    [-33.410265, -70.606161], [-33.403458, -70.604187], [-33.395791, -70.604187], [-33.389484, -70.598178],
+    [-33.385184, -70.593372], [-33.381243, -70.584960], [-33.379451, -70.574832], [-33.377014, -70.565322],
+    [-33.375867, -70.557340], [-33.374290, -70.548500], [-33.375650, -70.542320], [-33.380700, -70.538024],
+    [-33.390000, -70.536000], [-33.405000, -70.539000], [-33.415000, -70.550000], [-33.420000, -70.565000],
+    [-33.420000, -70.585000], [-33.416000, -70.600000], [-33.410265, -70.606161]
 ];
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
@@ -163,12 +172,13 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
 }) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<any>(null);
-    const leafletReady = useRef(false);
+    const [isMapReady, setIsMapReady] = useState(false);
     const fleetMarkers = useRef<Map<string, any>>(new Map());
     const ticketMarkers = useRef<any[]>([]);
     const cameraMarkers = useRef<Map<string, any>>(new Map());
     const suspectTrail = useRef<[number, number][]>([]);
     const suspectPolyline = useRef<any>(null);
+    const customPolygon = useRef<any>(null);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const allAreas = useMemo(() => Array.from(new Set(tickets.map(t => t.area_name).filter(Boolean))).sort(), [tickets]);
     const suspectVisible = fleetVehicles.some(v => v.type === 'suspect');
@@ -176,7 +186,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
 
     // Fleet markers update
     useEffect(() => {
-        if (!leafletReady.current) return;
+        if (!isMapReady) return;
         const map = mapInstance.current; if (!map) return;
         if (!showVehicles) {
             for (const m of fleetMarkers.current.values()) map.removeLayer(m);
@@ -203,7 +213,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
 
     // Ticket markers
     useEffect(() => {
-        if (!leafletReady.current) return;
+        if (!isMapReady) return;
         const map = mapInstance.current; if (!map) return;
         // Remove old
         for (const m of ticketMarkers.current) map.removeLayer(m);
@@ -216,17 +226,19 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
             return true;
         });
         visible.forEach(t => {
-            const color = urgencyColors[t.urgency_level] || '#2596be';
+            const urgencyColor = urgencyColors[t.urgency_level] || '#2596be';
+            const statusBorder = statusColor(t.status).text;
+
             const m = L.marker([t.lat!, t.lon!], {
-                icon: L.divIcon({ html: `<div style="width:22px;height:22px;background:${color};border-radius:50%;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.2)"></div>`, className: '', iconSize: [22, 22] as [number, number], iconAnchor: [11, 11] as [number, number] })
+                icon: L.divIcon({ html: `<div style="width:24px;height:24px;background:${urgencyColor};border-radius:50%;border:3.5px solid ${statusBorder};box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`, className: '', iconSize: [24, 24] as [number, number], iconAnchor: [12, 12] as [number, number] })
             }).bindPopup(`<div style="font-family:system-ui;font-size:13px;width:210px"><div style="font-weight:600;margin-bottom:4px">${t.title}</div><div style="color:#6B7280;font-size:12px">${t.area_name || 'Sin área'} · ${t.urgency_level || '—'}</div></div>`, { maxWidth: 240 }).addTo(map);
             ticketMarkers.current.push(m);
         });
-    }, [tickets, showTickets, mapUrgencies]);
+    }, [tickets, showTickets, mapUrgencies, isMapReady]);
 
     // Camera markers
     useEffect(() => {
-        if (!leafletReady.current) return;
+        if (!isMapReady) return;
         const map = mapInstance.current; if (!map) return;
         if (!showCameras) {
             for (const m of cameraMarkers.current.values()) map.removeLayer(m);
@@ -235,30 +247,49 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
         }
         for (const cam of CAMERAS) {
             if (cameraMarkers.current.has(cam.id)) continue;
-            const popup = `<div style="font-family:system-ui;width:260px;padding:4px 0">
-              <div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:6px">📷 ${cam.id} — ${cam.name}</div>
-              <img src="${cam.gif}" alt="${cam.id}" style="width:100%;border-radius:8px;border:1px solid rgba(0,0,0,0.1)" />
-              <div style="font-size:10px;color:#94a3b8;margin-top:4px;text-align:center">Simulación en tiempo real</div>
+            const ytEmbed = `https://www.youtube.com/embed/${cam.yt_id}?autoplay=1&mute=1&loop=1&playlist=${cam.yt_id}&controls=0&modestbranding=1`;
+            const popup = `<div style="font-family:system-ui;width:280px;padding:4px 0">
+              <div style="font-size:12.5px;font-weight:600;color:#1e293b;margin-bottom:6px">📷 ${cam.id} — ${cam.name}</div>
+              <div style="border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,0.1);background:#000;height:158px">
+                 <iframe width="100%" height="158" src="${ytEmbed}" title="Cámara CCTV" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              </div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:6px;text-align:center;text-transform:uppercase;letter-spacing:0.5px">Transmitiendo en vivo</div>
             </div>`;
-            const m = L.marker([cam.lat, cam.lon], { icon: makeCameraIcon() }).bindPopup(popup, { maxWidth: 280 }).addTo(map);
+            const m = L.marker([cam.lat, cam.lon], { icon: makeCameraIcon() }).bindPopup(popup, { maxWidth: 320 }).addTo(map);
             cameraMarkers.current.set(cam.id, m);
         }
-    }, [showCameras]);
+    }, [showCameras, isMapReady]);
 
     // Init Leaflet (Voyager tiles = colorful streets)
     useEffect(() => {
         if (mapInstance.current || !mapRef.current) return;
-        const map = L.map(mapRef.current).setView([-33.383, -70.58], 13);
-        mapInstance.current = map; leafletReady.current = true;
-        // Voyager = streets with colors (like the tickets map in OperadorPage)
+        const map = L.map(mapRef.current).setView([-33.393, -70.58], 13);
+        mapInstance.current = map;
+
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20
         }).addTo(map);
+
+        // Inverse shading polygon: World bounds minus Vitacura
+        const worldPolygon = [
+            [90, -180], [90, 180], [-90, 180], [-90, -180]
+        ];
+        customPolygon.current = L.polygon([worldPolygon, VITACURA_LATLNG], {
+            color: '#1e293b',
+            fillColor: '#1e293b',
+            fillOpacity: 0.15,
+            weight: 2.5,
+            opacity: 0.3
+        }).addTo(map);
+
+        setIsMapReady(true);
+
         return () => {
             if (mapInstance.current) {
-                mapInstance.current.remove(); mapInstance.current = null; leafletReady.current = false;
+                mapInstance.current.remove(); mapInstance.current = null;
+                setIsMapReady(false);
                 fleetMarkers.current.clear(); ticketMarkers.current = []; cameraMarkers.current.clear();
-                suspectTrail.current = []; suspectPolyline.current = null;
+                suspectTrail.current = []; suspectPolyline.current = null; customPolygon.current = null;
             }
         };
     }, []);
