@@ -29,7 +29,7 @@ export interface FleetTick {
   vehicles: FleetVehicle[];
 }
 
-const TICK_MS = 800;
+const TICK_MS = 400;
 
 function getWsUrl(): string {
   const ws = import.meta.env.VITE_BACKEND_WS_URL;
