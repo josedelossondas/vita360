@@ -10,7 +10,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, ChevronDown } from 'lucide-react';
 import vitAvatar from '../../assets/vit-avatar.png';
-import { useAuth, API_URL } from '../context/AuthContext';
+import { useAuth, API_URL } from '../../context/AuthContext';
 
 // ── Datos de contacto institucionales ─────────────────────────────────────────
 const CONTACT = {

@@ -33,9 +33,11 @@ export function LoginPage() {
         if (userData?.role === "jefe_cuadrilla") {
           navigate("/jefe-cuadrilla");
         } else if (userData?.role === "operador" || userData?.role === "supervisor" || userData?.role === "operator") {
-          navigate("/app");
+          navigate("/operador");
+        } else if (userData?.role === "ciudadano") {
+          navigate("/ciudadano");
         } else {
-          navigate("/");
+          navigate("/ciudadano");
         }
       } else {
         await register(name.trim(), email.trim(), password, role);
