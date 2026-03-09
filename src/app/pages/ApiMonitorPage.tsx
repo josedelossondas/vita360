@@ -251,7 +251,12 @@ export function ApiMonitorPage() {
     const [allTickets, setAllTickets] = useState<AllTicket[]>([]);
     const [page, setPage] = useState(1);
 
-    const knownCount = useRef<number | null>(null);
+    // Se lee de sessionStorage para sobrevivir navegación entre páginas.
+    const knownCount = useRef<number | null>(
+        sessionStorage.getItem('vita360_known_count') !== null
+            ? Number(sessionStorage.getItem('vita360_known_count'))
+            : null
+    );
     const processingQueue = useRef<Set<number>>(new Set());
     const concurrency = useRef(0);
     const pendingQueue = useRef<Array<{ id: number; title: string; description: string }>>([]);
@@ -277,11 +282,15 @@ export function ApiMonitorPage() {
             if (!raw) return;
             const parsed = JSON.parse(raw) as any[];
             if (!Array.isArray(parsed)) return;
-            setLogs(parsed.map(item => ({
+            const hydrated = parsed.map(item => ({
                 ...item,
                 started_at: item.started_at ? new Date(item.started_at) : new Date(),
                 finished_at: item.finished_at ? new Date(item.finished_at) : null,
-            })));
+            }));
+            setLogs(hydrated);
+            // Inicializar la cola con los IDs ya presentes en el log
+            // para que navegación de vuelta no los reprocese.
+            processingQueue.current = new Set(hydrated.map(l => l.id));
         } catch { /* ignore */ }
     }, []);
 
@@ -438,10 +447,15 @@ export function ApiMonitorPage() {
                     currentCount = (await fb.json()).length ?? 0;
                 }
                 setLastChecked(new Date());
-                if (knownCount.current === null) { knownCount.current = currentCount; return; }
+                if (knownCount.current === null) {
+                    knownCount.current = currentCount;
+                    sessionStorage.setItem('vita360_known_count', String(currentCount));
+                    return;
+                }
                 if (currentCount <= knownCount.current) return;
                 const diff = currentCount - knownCount.current;
                 knownCount.current = currentCount;
+                sessionStorage.setItem('vita360_known_count', String(currentCount));
                 // Refrescar la lista completa
                 const fresh = await fetch(`${API_URL}/tickets`, { headers: { Authorization: `Bearer ${token}` } });
                 if (!fresh.ok) return;
