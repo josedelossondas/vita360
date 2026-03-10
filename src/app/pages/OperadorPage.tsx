@@ -193,21 +193,6 @@ export function OperadorPage() {
     <div>
       {/* ── Contenido principal ── */}
 
-      {/* ── Panel header ── */}
-      <div className="mb-5 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold" style={{ color: "#1e293b" }}>Panel Operador</h1>
-          <p className="text-[13px] mt-0.5" style={{ color: "#64748b" }}>
-            Hola, <span className="font-medium">{user?.name}</span> — Gestión y seguimiento de solicitudes ciudadanas
-          </p>
-        </div>
-        <button onClick={() => { fetchTickets(); fetchSquads(); }} disabled={loading}
-          className="p-2 rounded-lg border transition-all"
-          style={{ borderColor: "rgba(37,150,190,0.15)", color: "#64748b", background: "rgba(255,255,255,0.7)" }}>
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-        </button>
-      </div>
-
       {/* ── KPIs x5 ── */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
         {[
