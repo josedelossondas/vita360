@@ -14,6 +14,7 @@ import {
   Camera,
 } from "lucide-react";
 import { useAuth, API_URL } from "../../context/AuthContext";
+import { VITChat } from "../components/VITChat";
 
 const VITACURA_LOGO =
   "https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png";
@@ -658,6 +659,8 @@ export function CiudadanoPage() {
         )}
       </main>
       <div className="relative z-10"><VitacuraFooter /></div>
+      {/* VIT Chatbot — flotante sobre toda la página */}
+      <VITChat />
     </div>
   );
 }
