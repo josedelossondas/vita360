@@ -362,6 +362,7 @@ export function ApiMonitorPage() {
                         description: ticket.description,
                         area: areaName,
                         squad_types: [`Cuadrilla ${areaName} A`, `Cuadrilla ${areaName} B`],
+                        ticket_id: ticket.id,
                     }),
                 }).then(r => r.ok ? r.json() : { task_summary: ticket.title.slice(0, 60), estimated_hours: 24 }),
 
