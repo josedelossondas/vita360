@@ -29,6 +29,8 @@ interface Ticket {
   priority_score: number;
   area_name: string;
   squad_name: string | null;
+  task_summary: string | null;
+  estimated_hours: number | null;
   assigned_to: string | null;
   planned_date: string;
   created_at: string;
@@ -103,7 +105,7 @@ export function OperadorPage() {
   // Cargar métricas IA desde localStorage
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('vita360_ia_logs_v1');
+      const raw = localStorage.getItem('vita360_ia_logs_v2');
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return;
@@ -150,7 +152,10 @@ export function OperadorPage() {
       const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/assign`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ squad_name: assignSquad }),
+        body: JSON.stringify({
+          squad_name: assignSquad,
+          estimated_hours: selectedTicket.estimated_hours ?? undefined,
+        }),
       });
       if (res.ok) {
         const currentIdx = STATUS_FLOW.indexOf(selectedTicket.status);
@@ -390,6 +395,18 @@ export function OperadorPage() {
                   <span className="font-medium" style={{ color: "#7c3aed" }}>{selectedTicket.squad_name}</span>
                 </div>
               )}
+              {selectedTicket.task_summary && (
+                <div className="flex justify-between gap-2">
+                  <span style={{ color: "#94a3b8" }}>Tarea IA</span>
+                  <span className="font-medium text-right" style={{ color: "#1e293b" }}>{selectedTicket.task_summary}</span>
+                </div>
+              )}
+              {selectedTicket.estimated_hours != null && (
+                <div className="flex justify-between">
+                  <span style={{ color: "#94a3b8" }}>Horas estimadas</span>
+                  <span className="font-medium" style={{ color: "#b45309" }}>{selectedTicket.estimated_hours}h</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span style={{ color: "#94a3b8" }}>Fecha límite SLA</span>
                 <span style={{ color: "#1e293b" }}>{new Date(selectedTicket.planned_date).toLocaleDateString("es-CL")}</span>
@@ -411,7 +428,7 @@ export function OperadorPage() {
                   onBlur={e => e.target.style.borderColor = "rgba(37,150,190,0.2)"}>
                   <option value="">Seleccionar cuadrilla...</option>
                   {(availableSquads.length > 0 ? availableSquads : squads).map(s => (
-                    <option key={s.id} value={s.name}>{s.name} ({s.pending_tasks} tareas)</option>
+                    <option key={s.id} value={s.name}>{s.name} ({s.pending_tasks}h pendientes)</option>
                   ))}
                 </select>
                 <button onClick={handleAssign} disabled={!assignSquad || assigning}
