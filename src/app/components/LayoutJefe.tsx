@@ -1,17 +1,32 @@
 import { Outlet, Navigate, useNavigate } from "react-router";
-import { LogOut, ShieldCheck } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect } from "react";
+import { LogOut, ShieldCheck, Radio } from "lucide-react";
+import { useAuth, API_URL } from "../../context/AuthContext";
 
 const VITACURA_LOGO =
     'https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png';
 
 export function LayoutJefe() {
-    const { user, logout } = useAuth();
+    const { user, logout, token } = useAuth();
     const navigate = useNavigate();
 
     if (!user || user.role !== "jefe_cuadrilla") {
         return <Navigate to="/" replace />;
     }
+
+    const [isPatrol, setIsPatrol] = useState(false);
+    const [squadName, setSquadName] = useState('');
+
+    useEffect(() => {
+        if (!token) return;
+        const savedSquad = localStorage.getItem('vita_jefe_squad');
+        setSquadName(savedSquad || '');
+        fetch(`${API_URL}/squads`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json()).then((squads: any[]) => {
+                const mine = squads.find(s => s.name === savedSquad);
+                setIsPatrol(mine?.squad_type === 'patrulla');
+            }).catch(() => {});
+    }, [token]);
 
     return (
         <div style={{

@@ -160,7 +160,7 @@ export function LayoutOperador() {
         : 'OP';
 
     const navItems = [
-        { to: '/operador', label: 'Dashboard', icon: LayoutDashboard, end: true },
+        { to: '/operador', label: 'Administrador', icon: LayoutDashboard, end: true },
         { to: '/operador/tickets', label: 'Tickets', icon: Ticket, end: false },
         { to: '/operador/api', label: 'Monitor IA', icon: Activity, end: false },
     ];
@@ -198,7 +198,7 @@ export function LayoutOperador() {
                                 <div className="text-[15px] font-semibold leading-tight" style={{ color: '#1e293b' }}>
                                     Vita<span style={{ color: '#2596be' }}>360</span>
                                 </div>
-                                <div className="text-[10px] leading-none" style={{ color: '#94a3b8' }}>Panel Operador</div>
+                                <div className="text-[10px] leading-none" style={{ color: '#94a3b8' }}>Panel Administrador</div>
                             </div>
                         </div>
                         {/* Tab nav */}

@@ -9,6 +9,7 @@ import { useFleetStream } from '../../hooks/useFleetStream';
 import type { FleetVehicle } from '../../hooks/useFleetStream';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { VITChat } from '../components/VITChat';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Ticket {
@@ -196,6 +197,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
     const suspectTrail = useRef<[number, number][]>([]);
     const suspectPolyline = useRef<any>(null);
     const customPolygon = useRef<any>(null);
+    const heatmapLayer = useRef<any[]>([]);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const allAreas = useMemo(() => Array.from(new Set(tickets.map(t => t.area_name).filter(Boolean))).sort(), [tickets]);
     const suspectVisible = fleetVehicles.some(v => v.type === 'suspect');
@@ -244,16 +246,34 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
             if (selectedAreas.length > 0 && !selectedAreas.includes(t.area_name)) return false;
             return true;
         });
+        // Clear old heatmap circles
+        for (const c of heatmapLayer.current) map.removeLayer(c);
+        heatmapLayer.current = [];
+
+        // Draw heatmap blobs (large semi-transparent circles) + pin markers
         visible.forEach(t => {
             const urgencyColor = urgencyColors[t.urgency_level] || '#2596be';
             const statusBorder = statusColor(t.status).text;
+            const radius = t.urgency_level === 'Alta' ? 260 : t.urgency_level === 'Media' ? 190 : 140;
+            const opacity = t.urgency_level === 'Alta' ? 0.18 : t.urgency_level === 'Media' ? 0.13 : 0.09;
 
+            // Heatmap glow circle
+            const heat = L.circle([t.lat!, t.lon!], {
+                radius,
+                color: urgencyColor,
+                fillColor: urgencyColor,
+                fillOpacity: opacity,
+                weight: 0,
+            }).addTo(map);
+            heatmapLayer.current.push(heat);
+
+            // Pin marker on top
             const m = L.marker([t.lat!, t.lon!], {
                 icon: L.divIcon({ html: `<div style="width:24px;height:24px;background:${urgencyColor};border-radius:50%;border:3.5px solid ${statusBorder};box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`, className: '', iconSize: [24, 24] as [number, number], iconAnchor: [12, 12] as [number, number] })
             }).bindPopup(`<div style="font-family:system-ui;font-size:13px;width:210px"><div style="font-weight:600;margin-bottom:4px">${t.title}</div><div style="color:#6B7280;font-size:12px">${t.area_name || 'Sin área'} · ${t.urgency_level || '—'}</div></div>`, { maxWidth: 240 }).addTo(map);
             ticketMarkers.current.push(m);
         });
-    }, [tickets, showTickets, mapUrgencies, selectedStatuses, selectedAreas, isMapReady]);
+    }, [tickets, showTickets, mapUrgencies, selectedStatuses, selectedAreas, isMapReady]); // heatmapLayer updated inside
 
     // Camera markers
     useEffect(() => {
@@ -289,16 +309,14 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
             attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20
         }).addTo(map);
 
-        // Inverse shading polygon: World bounds minus Vitacura
-        const worldPolygon = [
-            [90, -180], [90, 180], [-90, 180], [-90, -180]
-        ];
-        customPolygon.current = L.polygon([worldPolygon, VITACURA_LATLNG], {
-            color: '#1e293b',
-            fillColor: '#1e293b',
-            fillOpacity: 0.15,
-            weight: 2.5,
-            opacity: 0.3
+        // Vitacura boundary outline only (no fill — heatmap is added dynamically)
+        customPolygon.current = L.polygon(VITACURA_LATLNG, {
+            color: '#2596be',
+            fillColor: 'transparent',
+            fillOpacity: 0,
+            weight: 2,
+            opacity: 0.35,
+            dashArray: '8 4',
         }).addTo(map);
 
         setIsMapReady(true);
@@ -308,7 +326,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
                 mapInstance.current.remove(); mapInstance.current = null;
                 setIsMapReady(false);
                 fleetMarkers.current.clear(); ticketMarkers.current = []; cameraMarkers.current.clear();
-                suspectTrail.current = []; suspectPolyline.current = null; customPolygon.current = null;
+                suspectTrail.current = []; suspectPolyline.current = null; customPolygon.current = null; heatmapLayer.current = [];
             }
         };
     }, []);
@@ -350,10 +368,11 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
 
             {/* Leyenda — solo urgencias + cámara */}
             <div className="flex gap-4 px-5 py-2 text-[11.5px]" style={{ color: '#94a3b8' }}>
-                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#b82c87' }} />Alta urgencia</span>
-                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#f59e0b' }} />Media</span>
-                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#2596be' }} />Baja</span>
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#b82c87', opacity:0.7 }} />Alta urgencia</span>
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#f59e0b', opacity:0.7 }} />Media</span>
+                <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#2596be', opacity:0.7 }} />Baja</span>
                 <span className="flex items-center gap-1.5"><span className="text-[14px]">📷</span>Cámara</span>
+                <span className="flex items-center gap-1.5" style={{marginLeft:'auto', fontSize:11, color:'#94a3b8'}}><span style={{width:14,height:14,borderRadius:'50%',background:'linear-gradient(135deg,#b82c87,#f59e0b,#2596be)',display:'inline-block',marginRight:4,opacity:0.6}} />Los halos muestran la densidad de incidentes</span>
             </div>
         </div>
     );
@@ -666,5 +685,6 @@ export function Dashboard() {
                 </div>
             </div>
         </div>
+        <VITChat mode="admin" />
     );
 }
