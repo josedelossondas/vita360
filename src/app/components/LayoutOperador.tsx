@@ -12,7 +12,20 @@ const VITACURA_LOGO =
 // ── Footer Vitacura ───────────────────────────────────────────────────────────
 function VitacuraFooter() {
     return (
-        <footer className="w-full mt-16" style={{ background: '#ffffff', borderTop: '1px solid rgba(37,150,190,0.1)' }}>
+        <footer className="w-full mt-16 relative overflow-hidden" style={{
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderTop: '1px solid rgba(37,150,190,0.12)',
+            boxShadow: '0 -4px 32px rgba(37,150,190,0.06)',
+        }}>
+            {/* Tricolor hairline */}
+            <div className="w-full h-0.5" style={{ background: 'linear-gradient(90deg, #2596be 0%, #c0cf05 50%, #b82c87 100%)' }} />
+            {/* Background gradient orbs */}
+            <div className="absolute top-0 left-0 w-80 h-80 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(37,150,190,0.06) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
+            <div className="absolute bottom-0 right-0 w-72 h-72 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(184,44,135,0.05) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
+            <div className="absolute top-0 right-1/3 w-64 h-64 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(192,207,5,0.04) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
+            <div className="relative z-10">
             <div className="max-w-6xl mx-auto px-6 py-10">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 items-start">
                     {/* Logo */}
@@ -100,9 +113,20 @@ function VitacuraFooter() {
 
                     {/* Alcaldesa */}
                     <div className="flex flex-col items-center text-center gap-2">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-bold border-2"
-                            style={{ background: 'linear-gradient(135deg, rgba(37,150,190,0.15) 0%, rgba(184,44,135,0.1) 100%)', borderColor: 'rgba(37,150,190,0.2)', color: '#2596be' }}>
-                            CM
+                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 flex-shrink-0"
+                            style={{ borderColor: 'rgba(37,150,190,0.3)', boxShadow: '0 2px 10px rgba(37,150,190,0.15)' }}>
+                            <img
+                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Camila_Merino_Catal%C3%A1n.jpg/220px-Camila_Merino_Catal%C3%A1n.jpg"
+                                alt="Camila Merino"
+                                className="w-full h-full object-cover"
+                                onError={e => {
+                                    const el = e.target as HTMLImageElement;
+                                    el.style.display = 'none';
+                                    const parent = el.parentElement!;
+                                    parent.style.background = 'linear-gradient(135deg, rgba(37,150,190,0.15) 0%, rgba(184,44,135,0.1) 100%)';
+                                    parent.innerHTML = '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#2596be">CM</span>';
+                                }}
+                            />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2596be' }}>Alcaldesa</p>
@@ -115,6 +139,7 @@ function VitacuraFooter() {
             <div className="border-t text-center py-4 text-[12px]" style={{ borderColor: 'rgba(37,150,190,0.08)', color: '#94a3b8' }}>
                 © Municipalidad de Vitacura
             </div>
+            </div>{/* end relative z-10 */}
         </footer>
     );
 }

@@ -240,6 +240,8 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
         const visible = tickets.filter(t => {
             if (!t.lat || !t.lon) return false;
             if (mapUrgencies.length > 0 && !mapUrgencies.includes(t.urgency_level)) return false;
+            if (selectedStatuses.length > 0 && !selectedStatuses.includes(t.status)) return false;
+            if (selectedAreas.length > 0 && !selectedAreas.includes(t.area_name)) return false;
             return true;
         });
         visible.forEach(t => {
@@ -251,7 +253,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
             }).bindPopup(`<div style="font-family:system-ui;font-size:13px;width:210px"><div style="font-weight:600;margin-bottom:4px">${t.title}</div><div style="color:#6B7280;font-size:12px">${t.area_name || 'Sin área'} · ${t.urgency_level || '—'}</div></div>`, { maxWidth: 240 }).addTo(map);
             ticketMarkers.current.push(m);
         });
-    }, [tickets, showTickets, mapUrgencies, isMapReady]);
+    }, [tickets, showTickets, mapUrgencies, selectedStatuses, selectedAreas, isMapReady]);
 
     // Camera markers
     useEffect(() => {
@@ -344,7 +346,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
                 )}
             </div>
 
-            <div ref={mapRef} style={{ width: '100%', height: 420 }} />
+            <div ref={mapRef} style={{ width: '100%', height: 520 }} />
 
             {/* Leyenda — solo urgencias + cámara */}
             <div className="flex gap-4 px-5 py-2 text-[11.5px]" style={{ color: '#94a3b8' }}>

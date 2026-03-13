@@ -346,7 +346,7 @@ export function JefeDashboard() {
                 </div>
 
                 {/* Mapa */}
-                <div style={{ ...cardStyle, position: 'relative', overflow: 'hidden', height: 560 }}>
+                <div style={{ ...cardStyle, position: 'relative', overflow: 'hidden', height: 620 }}>
                     {/* Overlay título */}
                     <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 500, display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', border: '1px solid rgba(37,150,190,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
                         <Activity size={12} style={{ color: '#2596be' }} />

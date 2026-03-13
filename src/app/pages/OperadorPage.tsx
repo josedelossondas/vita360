@@ -250,7 +250,7 @@ export function OperadorPage() {
                   status: t.status,
                 };
               })}
-            height={320}
+            height={500}
             center={[-33.392, -70.578]}
             zoom={14}
           />
