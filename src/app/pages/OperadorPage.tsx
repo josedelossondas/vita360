@@ -33,7 +33,7 @@ interface Ticket {
   estimated_hours: number | null;
   assigned_to: string | null;
   lat: number | null;
-  lng: number | null;
+  lon: number | null;
   planned_date: string;
   created_at: string;
   reported_by: string;
@@ -362,7 +362,7 @@ export function OperadorPage() {
               .map((t): MapMarker => ({
                 id: `#${t.id}`,
                 lat: t.lat ?? -33.392,
-                lng: t.lng ?? -70.578,
+                lng: t.lon ?? -70.578,
                 title: t.title,
                 desc: t.area_name || t.description?.slice(0, 60) || "",
                 urgency: t.urgency_level,

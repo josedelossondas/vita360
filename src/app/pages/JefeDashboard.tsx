@@ -371,7 +371,8 @@ function RegularSquadDashboard({ tickets, squadName, squads, allSquads }: { tick
       [-33.4198,-70.5601],[-33.4312,-70.5712],[-33.4356,-70.5889],[-33.4289,-70.6034],
       [-33.4178,-70.6089],[-33.4012,-70.6112],[-33.3856,-70.6134],[-33.3726,-70.6056],
     ];
-    L.polygon([[90,-180],[90,180],[-90,180],[-90,-180],[...VITA2].reverse()] as any, {
+    const outerWorld2: [number, number][] = [[90,-180],[90,180],[-90,180],[-90,-180]];
+    L.polygon([outerWorld2, [...VITA2].reverse()], {
       stroke: false, fillColor: '#94a3b8', fillOpacity: 0.45,
     }).addTo(map);
     L.polygon(VITA2, { color: '#64748b', weight: 2, opacity: 0.6, dashArray: '6 4', fill: false }).addTo(map);
