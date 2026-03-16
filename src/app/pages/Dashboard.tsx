@@ -23,6 +23,19 @@ interface DashboardStats {
     total_tickets: number; tickets_by_status: Record<string, number>;
     avg_response_time: string; tickets_at_risk: number;
 }
+interface SquadStats {
+    id: number;
+    name: string;
+    area_name: string;
+    squad_type: string;
+    total_tasks: number;
+    total_hours: number;
+    pending_hours: number;
+    completed_tasks: number;
+    completed_on_time: number;
+    completed_late: number;
+    sla_percentage: number;
+}
 type SortColumn = 'priority' | 'date' | 'status' | 'area' | 'id' | 'title';
 
 const STATUS_LIST = ['Recibido', 'Asignado', 'En Gestión', 'Resuelto', 'Cerrado'];
@@ -34,7 +47,6 @@ const CAMERAS = [
     { id: 'CAM-02', name: 'Av. Kennedy / El Bosque Norte', lat: -33.3990, lon: -70.5820, yt_id: '5jPpMkg5daM' },
     { id: 'CAM-03', name: 'Av. Vitacura / Alonso de Córdova', lat: -33.3940, lon: -70.5700, yt_id: '0pjFuk15b94' },
     { id: 'CAM-04', name: 'Av. Las Condes / Tabancura', lat: -33.3860, lon: -70.5560, yt_id: 'RhdmP5017VM' },
-    { id: 'CAM-05', name: 'Rosario Norte / Kennedy', lat: -33.4020, lon: -70.5660, yt_id: '_hElzf7C1D8' },
 ];
 
 // ── Polygon coordinates [lat, lon] for Leaflet — GeoJSON oficial de Vitacura ──
@@ -492,11 +504,18 @@ export function Dashboard() {
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [squadStats, setSquadStats] = useState<SquadStats[]>([]);
+    const [loadingSquadStats, setLoadingSquadStats] = useState(false);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const pageSize = 8;
 
-    useEffect(() => { if (token) fetchData(); }, [token]);
+    useEffect(() => { 
+        if (token) { 
+            fetchData(); 
+            fetchSquadStats(); 
+        } 
+    }, [token]);
 
     const fetchData = async () => {
         try {
@@ -509,6 +528,26 @@ export function Dashboard() {
                 setStats({ total_tickets: enriched.length, tickets_by_status: enriched.reduce((acc: Record<string, number>, t: Ticket) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {}), avg_response_time: '2h 15m', tickets_at_risk: enriched.filter((t: Ticket) => t.status !== 'Resuelto' && t.urgency_level === 'Alta').length });
             }
         } catch (e) { console.error(e); } finally { setLoading(false); }
+    };
+
+    const fetchSquadStats = async () => {
+        if (!token) return;
+        setLoadingSquadStats(true);
+        try {
+            const res = await fetch(`${API_URL}/squads/stats`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSquadStats(data);
+            } else {
+                console.error('Error fetching squad stats:', res.status);
+            }
+        } catch (err) {
+            console.error('Error fetching squad stats:', err);
+        } finally {
+            setLoadingSquadStats(false);
+        }
     };
 
     const filteredAndSorted = useMemo(() => {
@@ -683,6 +722,222 @@ export function Dashboard() {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            {/* TABLA DE ESTADÍSTICAS DE CUADRILLAS */}
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            <div className="mt-6 rounded-2xl border p-6" 
+                style={{ 
+                    background: 'rgba(255,255,255,0.95)', 
+                    backdropFilter: 'blur(16px)', 
+                    borderColor: 'rgba(37,150,190,0.1)',
+                    boxShadow: '0 4px 20px rgba(37,150,190,0.07)'
+                }}>
+                
+                {/* Header */}
+                <div className="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 className="text-[18px] font-semibold mb-1" style={{ color: '#1e293b' }}>
+                            Estadísticas de Cuadrillas
+                        </h2>
+                        <p className="text-[12px]" style={{ color: '#94a3b8' }}>
+                            Rendimiento y métricas SLA por cuadrilla
+                        </p>
+                    </div>
+                    <button 
+                        onClick={fetchSquadStats}
+                        disabled={loadingSquadStats}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all hover:bg-blue-50"
+                        style={{
+                            background: 'rgba(37,150,190,0.1)',
+                            color: '#2596be',
+                            border: '1px solid rgba(37,150,190,0.2)'
+                        }}>
+                        <ChevronDown className={`w-4 h-4 ${loadingSquadStats ? 'animate-spin' : ''}`} />
+                        Actualizar
+                    </button>
+                </div>
+                
+                {/* Tabla */}
+                {loadingSquadStats ? (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <ChevronDown className="w-8 h-8 animate-spin mx-auto mb-3" style={{ color: '#2596be' }} />
+                            <p className="text-[13px]" style={{ color: '#94a3b8' }}>Cargando estadísticas...</p>
+                        </div>
+                    </div>
+                ) : squadStats.length === 0 ? (
+                    <div className="text-center py-12">
+                        <FileQuestion className="w-12 h-12 mx-auto mb-3" style={{ color: '#cbd5e1' }} />
+                        <p className="text-[14px]" style={{ color: '#64748b' }}>No hay cuadrillas registradas</p>
+                        <p className="text-[12px] mt-1" style={{ color: '#94a3b8' }}>
+                            Las cuadrillas aparecerán aquí una vez sean creadas
+                        </p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                                    <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wide font-medium" 
+                                        style={{ color: '#94a3b8' }}>
+                                        Cuadrilla
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wide font-medium" 
+                                        style={{ color: '#94a3b8' }}>
+                                        Área
+                                    </th>
+                                    <th className="text-center px-4 py-3 text-[11px] uppercase tracking-wide font-medium" 
+                                        style={{ color: '#94a3b8' }}>
+                                        Tareas
+                                    </th>
+                                    <th className="text-center px-4 py-3 text-[11px] uppercase tracking-wide font-medium" 
+                                        style={{ color: '#94a3b8' }}>
+                                        Horas
+                                    </th>
+                                    <th className="text-center px-4 py-3 text-[11px] uppercase tracking-wide font-medium" 
+                                        style={{ color: '#94a3b8' }}>
+                                        % Resuelto en SLA
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {squadStats.map((squad) => (
+                                    <tr key={squad.id} 
+                                        className="transition-colors hover:bg-gray-50/50"
+                                        style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+                                        
+                                        {/* Nombre de cuadrilla */}
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-medium" style={{ color: '#2596be' }}>
+                                                    {squad.name}
+                                                </span>
+                                                <span className="text-[11px]" style={{ color: '#94a3b8' }}>
+                                                    {squad.squad_type}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        
+                                        {/* Área */}
+                                        <td className="px-4 py-3 text-[12.5px]" style={{ color: '#64748b' }}>
+                                            {squad.area_name || '—'}
+                                        </td>
+                                        
+                                        {/* Tareas */}
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="inline-block px-3 py-1 rounded-full text-[12px] font-medium"
+                                                    style={{ 
+                                                        background: 'rgba(37,150,190,0.1)', 
+                                                        color: '#2596be' 
+                                                    }}>
+                                                    {squad.total_tasks}
+                                                </span>
+                                                {squad.completed_tasks > 0 && (
+                                                    <span className="text-[10px]" style={{ color: '#94a3b8' }}>
+                                                        {squad.completed_tasks} completadas
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        
+                                        {/* Horas */}
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="text-[13px] font-medium" style={{ color: '#1e293b' }}>
+                                                    {squad.total_hours}h
+                                                </span>
+                                                {squad.pending_hours > 0 && (
+                                                    <span className="text-[11px] px-2 py-0.5 rounded-md" 
+                                                        style={{ 
+                                                            background: 'rgba(245,158,11,0.1)', 
+                                                            color: '#b45309' 
+                                                        }}>
+                                                        {squad.pending_hours}h pendientes
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        
+                                        {/* % SLA */}
+                                        <td className="px-4 py-3">
+                                            {squad.completed_tasks === 0 ? (
+                                                <span className="text-[12px]" style={{ color: '#94a3b8' }}>—</span>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    {/* Barra de progreso */}
+                                                    <div className="w-full max-w-[120px] h-2 rounded-full overflow-hidden" 
+                                                        style={{ background: 'rgba(0,0,0,0.06)' }}>
+                                                        <div className="h-full rounded-full transition-all duration-300" 
+                                                            style={{ 
+                                                                width: `${Math.min(squad.sla_percentage, 100)}%`,
+                                                                background: squad.sla_percentage >= 80 
+                                                                    ? 'linear-gradient(90deg, #22c55e, #16a34a)' 
+                                                                    : squad.sla_percentage >= 60 
+                                                                    ? 'linear-gradient(90deg, #f59e0b, #d97706)' 
+                                                                    : 'linear-gradient(90deg, #ef4444, #dc2626)'
+                                                            }} />
+                                                    </div>
+                                                    
+                                                    {/* Porcentaje */}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[14px] font-semibold" 
+                                                            style={{ 
+                                                                color: squad.sla_percentage >= 80 
+                                                                    ? '#22c55e' 
+                                                                    : squad.sla_percentage >= 60 
+                                                                    ? '#f59e0b' 
+                                                                    : '#ef4444'
+                                                            }}>
+                                                            {squad.sla_percentage}%
+                                                        </span>
+                                                        
+                                                        {/* Breakdown */}
+                                                        <span className="text-[10px]" style={{ color: '#94a3b8' }}>
+                                                            ({squad.completed_on_time}/{squad.completed_tasks})
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {/* Badge de estado */}
+                                                    {squad.sla_percentage >= 90 ? (
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                                                            style={{ 
+                                                                background: 'rgba(34,197,94,0.1)', 
+                                                                color: '#16a34a',
+                                                                border: '1px solid rgba(34,197,94,0.2)'
+                                                            }}>
+                                                            Excelente
+                                                        </span>
+                                                    ) : squad.sla_percentage >= 70 ? (
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                                                            style={{ 
+                                                                background: 'rgba(245,158,11,0.1)', 
+                                                                color: '#d97706',
+                                                                border: '1px solid rgba(245,158,11,0.2)'
+                                                            }}>
+                                                            Aceptable
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                                                            style={{ 
+                                                                background: 'rgba(239,68,68,0.1)', 
+                                                                color: '#dc2626',
+                                                                border: '1px solid rgba(239,68,68,0.2)'
+                                                            }}>
+                                                            Necesita mejora
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
         <VITChat mode="admin" />
