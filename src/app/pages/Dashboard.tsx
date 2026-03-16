@@ -321,15 +321,27 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
             attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20
         }).addTo(map);
 
-		// Vitacura boundary outline only (no fill — heatmap is added dynamically)
-		customPolygon.current = L.polygon(VITACURA_LATLNG, {
-		    color: '#2596be',
-		    fillColor: 'transparent',
-		    fillOpacity: 0,
-		    weight: 2,
-		    opacity: 0.35,
-		    dashArray: '8 4',
+		// Máscara exterior: oscurece todo excepto Vitacura
+		const outerWorld: [number, number][] = [
+    			[90, -180], [90, 180], [-90, 180], [-90, -180],
+		];
+		const innerVitacura = [...VITACURA_LATLNG].reverse();
+
+		customPolygon.current = L.polygon([outerWorld, innerVitacura], {
+    			stroke: false,
+    			fillColor: '#94a3b8',   // gris (no azul oscuro)
+    			fillOpacity: 0.45,       // más suave para el efecto "aclarado" de Vitacura
 		}).addTo(map);
+
+		// Contorno del límite de Vitacura
+		L.polygon(VITACURA_LATLNG, {
+    			color: '#64748b',
+    			weight: 2,
+    			opacity: 0.6,
+    			dashArray: '6 4',
+    			fill: false,
+		}).addTo(map);
+
 
         setIsMapReady(true);
 
