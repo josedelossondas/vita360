@@ -939,7 +939,8 @@ export function Dashboard() {
                     </div>
                 )}
             </div>
+            
+            <VITChat mode="admin" />
         </div>
-        <VITChat mode="admin" />
     );
 }
