@@ -19,6 +19,31 @@ interface LeafletMapProps {
   zoom?: number;
 }
 
+// Polígono de Vitacura (mismo que Dashboard)
+const VITACURA_LATLNG: [number, number][] = [
+  [-33.40979121627189, -70.60720212276362],
+  [-33.40062873415507, -70.60840916155004],
+  [-33.389499332962856, -70.60289165587551],
+  [-33.384992599105885, -70.60089636010098],
+  [-33.38235000758301, -70.60277694816887],
+  [-33.3760046376323, -70.60036296220976],
+  [-33.36285230108139, -70.59916175951844],
+  [-33.353903448919226, -70.5857895350789],
+  [-33.3514840846016, -70.57726401140697],
+  [-33.35481947183783, -70.56659382227234],
+  [-33.358284938330605, -70.55266896741463],
+  [-33.366885883318275, -70.54445398028918],
+  [-33.37061534300281, -70.53934955826718],
+  [-33.36750323758047, -70.52074458758153],
+  [-33.37295876607694, -70.51749157581536],
+  [-33.37655552632404, -70.5258190410902],
+  [-33.38463659966653, -70.53453836833025],
+  [-33.4050878306965, -70.58657798777993],
+  [-33.409295179207504, -70.60055765154465],
+  [-33.4098027342863, -70.60727829770096],
+  [-33.40979121627189, -70.60720212276362],
+];
+
 // Matches Dashboard urgency colors exactly
 const urgencyColors: Record<string, string> = {
   Alta: "#b82c87",
@@ -78,6 +103,27 @@ export function LeafletMap({
       attribution: "© CARTO",
       subdomains: "abcd",
       maxZoom: 20,
+    }).addTo(map);
+
+    // Overlay oscuro fuera de Vitacura (igual que Dashboard)
+    const outerWorld: [number, number][] = [
+      [90, -180], [90, 180], [-90, 180], [-90, -180],
+    ];
+    const innerVitacura = [...VITACURA_LATLNG].reverse();
+
+    L.polygon([outerWorld, innerVitacura], {
+      stroke: false,
+      fillColor: "#94a3b8",
+      fillOpacity: 0.45,
+    }).addTo(map);
+
+    // Contorno del límite de Vitacura
+    L.polygon(VITACURA_LATLNG, {
+      color: "#64748b",
+      weight: 2,
+      opacity: 0.6,
+      dashArray: "6 4",
+      fill: false,
     }).addTo(map);
 
     mapRef.current = map;
