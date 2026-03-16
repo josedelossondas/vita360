@@ -124,11 +124,48 @@ export function OperadorPage() {
   };
 
   const fetchSquads = async () => {
-    if (!token) return;
+    if (!token) {
+      console.log('🔴 [SQUADS] No hay token disponible');
+      return;
+    }
+    
+    console.log('🔄 [SQUADS] Iniciando carga de cuadrillas...');
+    console.log('🔑 [SQUADS] Token presente:', token ? 'Sí (primeros 20 chars: ' + token.substring(0, 20) + '...)' : 'No');
+    console.log('🌐 [SQUADS] URL del endpoint:', `${API_URL}/squads`);
+    
     try {
-      const res = await fetch(`${API_URL}/squads`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setSquads(await res.json());
-    } catch { /* optional */ }
+      const res = await fetch(`${API_URL}/squads`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      
+      console.log('📡 [SQUADS] Response status:', res.status, res.statusText);
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log('✅ [SQUADS] Cuadrillas cargadas exitosamente');
+        console.log('📊 [SQUADS] Total de cuadrillas:', data.length);
+        console.log('📋 [SQUADS] Datos completos:', data);
+        
+        if (data.length === 0) {
+          console.warn('⚠️ [SQUADS] WARNING: No hay cuadrillas en la base de datos');
+          console.log('💡 [SQUADS] SUGERENCIA: Ejecuta el script de seed para crear cuadrillas de prueba');
+        }
+        
+        setSquads(data);
+      } else {
+        console.error('❌ [SQUADS] Error HTTP:', res.status, res.statusText);
+        try {
+          const errorData = await res.json();
+          console.error('📄 [SQUADS] Detalles del error:', errorData);
+        } catch (e) {
+          const errorText = await res.text();
+          console.error('📄 [SQUADS] Respuesta del servidor:', errorText);
+        }
+      }
+    } catch (error) {
+      console.error('💥 [SQUADS] Exception al cargar cuadrillas:', error);
+      console.error('🔍 [SQUADS] Tipo de error:', error instanceof TypeError ? 'TypeError (posible CORS o red)' : typeof error);
+    }
   };
 
   useEffect(() => { if (token) { fetchTickets(); fetchSquads(); } }, [token]);
@@ -145,33 +182,118 @@ export function OperadorPage() {
     ? squads.filter(s => s.area_name === selectedTicket.area_name)
     : squads;
 
+  // Determinar qué mostrar en el selector
+  const displaySquads = availableSquads.length > 0 ? availableSquads : squads;
+
+  // DEBUGGING: Logs cuando cambia el ticket seleccionado o las cuadrillas
+  useEffect(() => {
+    if (selectedTicket) {
+      console.log('═══════════════════════════════════════════');
+      console.log('🎫 [TICKET SELECTED] Ticket seleccionado cambió');
+      console.log('📋 [TICKET SELECTED] ID:', selectedTicket.id);
+      console.log('📍 [TICKET SELECTED] Área:', selectedTicket.area_name);
+      console.log('👥 [SQUADS FILTER] Total cuadrillas cargadas:', squads.length);
+      
+      if (squads.length > 0) {
+        const uniqueAreas = [...new Set(squads.map(s => s.area_name))];
+        console.log('🏢 [SQUADS FILTER] Áreas disponibles en cuadrillas:', uniqueAreas);
+      }
+      
+      console.log('✅ [SQUADS FILTER] Cuadrillas filtradas por área:', availableSquads.length);
+      
+      if (availableSquads.length > 0) {
+        console.log('📊 [SQUADS FILTER] Cuadrillas del área "' + selectedTicket.area_name + '":', 
+          availableSquads.map(s => s.name));
+      } else {
+        console.warn('⚠️ [SQUADS FILTER] No hay cuadrillas para el área:', selectedTicket.area_name);
+        console.log('💡 [SQUADS FILTER] Se mostrarán todas las cuadrillas como fallback');
+      }
+      
+      console.log('🎯 [SQUADS DISPLAY] Cuadrillas a mostrar en el selector:', displaySquads.length);
+      console.log('═══════════════════════════════════════════');
+    }
+  }, [selectedTicket, squads]);
+
   const handleAssign = async () => {
-    if (!token || !selectedTicket || !assignSquad) return;
+    console.log('═══════════════════════════════════════════');
+    console.log('🚀 [ASSIGN] Iniciando asignación de cuadrilla');
+    console.log('🔑 [ASSIGN] Token presente:', !!token);
+    console.log('🎫 [ASSIGN] Ticket seleccionado:', selectedTicket?.id);
+    console.log('👥 [ASSIGN] Cuadrilla a asignar:', assignSquad);
+    
+    if (!token || !selectedTicket || !assignSquad) {
+      console.error('❌ [ASSIGN] Validación fallida - datos faltantes:');
+      console.log('   - Token:', !!token);
+      console.log('   - Ticket seleccionado:', !!selectedTicket);
+      console.log('   - Cuadrilla elegida:', !!assignSquad);
+      console.log('═══════════════════════════════════════════');
+      return;
+    }
+    
     setAssigning(true);
+    
     try {
+      const requestBody = {
+        squad_name: assignSquad,
+        estimated_hours: selectedTicket.estimated_hours ?? undefined,
+      };
+      
+      console.log('📤 [ASSIGN] Enviando request a:', `${API_URL}/tickets/${selectedTicket.id}/assign`);
+      console.log('📦 [ASSIGN] Body:', requestBody);
+      
       const res = await fetch(`${API_URL}/tickets/${selectedTicket.id}/assign`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          squad_name: assignSquad,
-          estimated_hours: selectedTicket.estimated_hours ?? undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
+      
+      console.log('📡 [ASSIGN] Response status:', res.status, res.statusText);
+      
       if (res.ok) {
+        console.log('✅ [ASSIGN] Asignación exitosa');
+        
         const currentIdx = STATUS_FLOW.indexOf(selectedTicket.status);
         if (currentIdx < STATUS_FLOW.indexOf("Asignado")) {
+          console.log('🔄 [ASSIGN] Actualizando status a "Asignado"...');
           await fetch(`${API_URL}/tickets/${selectedTicket.id}/status`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({ status: "Asignado" }),
           });
+          console.log('✅ [ASSIGN] Status actualizado');
         }
+        
+        console.log('🔄 [ASSIGN] Recargando tickets...');
         const fresh = await fetchTickets();
         const updated = fresh.find(t => t.id === selectedTicket.id);
-        if (updated) setSelectedTicket(updated);
+        if (updated) {
+          setSelectedTicket(updated);
+          console.log('✅ [ASSIGN] Ticket actualizado en UI');
+        }
+        
+        console.log('🔄 [ASSIGN] Recargando cuadrillas...');
         await fetchSquads();
+        
+        console.log('🎉 [ASSIGN] Proceso completado exitosamente');
+        setAssignSquad('');
+        
+      } else {
+        console.error('❌ [ASSIGN] Error en la respuesta del servidor');
+        try {
+          const errorData = await res.json();
+          console.error('📄 [ASSIGN] Detalles del error:', errorData);
+        } catch (e) {
+          const errorText = await res.text();
+          console.error('📄 [ASSIGN] Respuesta del servidor:', errorText);
+        }
       }
-    } finally { setAssigning(false); }
+    } catch (error) {
+      console.error('💥 [ASSIGN] Exception durante la asignación:', error);
+      console.error('🔍 [ASSIGN] Tipo de error:', error instanceof TypeError ? 'TypeError (posible CORS o red)' : typeof error);
+    } finally { 
+      setAssigning(false); 
+      console.log('═══════════════════════════════════════════');
+    }
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
@@ -417,20 +539,78 @@ export function OperadorPage() {
 
             {/* Asignar cuadrilla */}
             <div>
-              <div className="text-[11px] uppercase tracking-wide font-medium mb-2.5" style={{ color: "#94a3b8" }}>
-                Reasignar cuadrilla
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="text-[11px] uppercase tracking-wide font-medium" style={{ color: "#94a3b8" }}>
+                  Reasignar cuadrilla
+                </div>
+                <button
+                  onClick={() => {
+                    console.log('🔄 [REFRESH] Recargando cuadrillas manualmente...');
+                    fetchSquads();
+                  }}
+                  className="text-[11px] flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                  style={{ color: '#2596be' }}>
+                  <RefreshCw className="w-3 h-3" />
+                  Recargar
+                </button>
               </div>
               <div className="space-y-2">
-                <select value={assignSquad} onChange={e => setAssignSquad(e.target.value)}
+                <select 
+                  value={assignSquad} 
+                  onChange={e => {
+                    console.log('🎯 [SELECT] Cuadrilla seleccionada:', e.target.value);
+                    setAssignSquad(e.target.value);
+                  }}
                   className="w-full px-3 py-2 rounded-lg text-[13px] outline-none border"
-                  style={{ background: "rgba(255,255,255,0.9)", borderColor: "rgba(37,150,190,0.2)", color: "#1e293b" }}
-                  onFocus={e => e.target.style.borderColor = "#2596be"}
+                  style={{ 
+                    background: displaySquads.length === 0 ? "rgba(100,116,139,0.05)" : "rgba(255,255,255,0.9)", 
+                    borderColor: "rgba(37,150,190,0.2)", 
+                    color: displaySquads.length === 0 ? "#94a3b8" : "#1e293b",
+                    cursor: displaySquads.length === 0 ? "not-allowed" : "pointer"
+                  }}
+                  disabled={displaySquads.length === 0}
+                  onFocus={e => {
+                    console.log('👆 [SELECT] Selector enfocado');
+                    console.log('📊 [SELECT] Opciones disponibles:', displaySquads.length);
+                    e.target.style.borderColor = "#2596be";
+                  }}
                   onBlur={e => e.target.style.borderColor = "rgba(37,150,190,0.2)"}>
-                  <option value="">Seleccionar cuadrilla...</option>
-                  {(availableSquads.length > 0 ? availableSquads : squads).map(s => (
-                    <option key={s.id} value={s.name}>{s.name} ({s.pending_tasks}h pendientes)</option>
+                  <option value="">
+                    {displaySquads.length === 0 
+                      ? (squads.length === 0 ? "No hay cuadrillas en el sistema" : "No hay cuadrillas para esta área")
+                      : "Seleccionar cuadrilla..."}
+                  </option>
+                  {displaySquads.map(s => (
+                    <option key={s.id} value={s.name}>
+                      {s.name} - {s.area_name} ({s.pending_tasks}h pendientes)
+                    </option>
                   ))}
                 </select>
+                
+                {/* Mensaje de ayuda si no hay cuadrillas */}
+                {displaySquads.length === 0 && squads.length > 0 && selectedTicket && (
+                  <div className="p-2 rounded-md text-[11px]" 
+                    style={{ 
+                      background: 'rgba(245,158,11,0.1)', 
+                      border: '1px solid rgba(245,158,11,0.2)',
+                      color: '#b45309'
+                    }}>
+                    ⚠️ No hay cuadrillas para el área "{selectedTicket.area_name}". 
+                    Revisa la consola (F12) para más detalles.
+                  </div>
+                )}
+
+                {squads.length === 0 && (
+                  <div className="p-2 rounded-md text-[11px]" 
+                    style={{ 
+                      background: 'rgba(239,68,68,0.1)', 
+                      border: '1px solid rgba(239,68,68,0.2)',
+                      color: '#dc2626'
+                    }}>
+                    ❌ No hay cuadrillas en el sistema. Revisa la consola (F12) para diagnóstico.
+                  </div>
+                )}
+                
                 <button onClick={handleAssign} disabled={!assignSquad || assigning}
                   className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
                   style={{
