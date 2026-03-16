@@ -124,6 +124,23 @@ function PatrolDashboard({ tickets, squadName, squads }: { tickets: Ticket[]; sq
       attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20,
     }).addTo(map);
 
+    // Overlay oscuro fuera de Vitacura
+    const VITACURA_LATLNG_1: [number, number][] = [
+      [-33.3726, -70.6056], [-33.3629, -70.5932], [-33.3641, -70.5773],
+      [-33.3715, -70.5621], [-33.3791, -70.5498], [-33.3873, -70.5438],
+      [-33.3965, -70.5401], [-33.4078, -70.5456], [-33.4198, -70.5601],
+      [-33.4312, -70.5712], [-33.4356, -70.5889], [-33.4289, -70.6034],
+      [-33.4178, -70.6089], [-33.4012, -70.6112], [-33.3856, -70.6134],
+      [-33.3726, -70.6056],
+    ];
+    const outerWorld1: [number, number][] = [[90, -180], [90, 180], [-90, 180], [-90, -180]];
+    L.polygon([outerWorld1, [...VITACURA_LATLNG_1].reverse()], {
+      stroke: false, fillColor: '#94a3b8', fillOpacity: 0.45,
+    }).addTo(map);
+    L.polygon(VITACURA_LATLNG_1, {
+      color: '#64748b', weight: 2, opacity: 0.6, dashArray: '6 4', fill: false,
+    }).addTo(map);
+
     // Draw quadrant bounds
     if (quadrant) {
       const [[s, w], [n, e]] = quadrant.bounds;
@@ -347,6 +364,17 @@ function RegularSquadDashboard({ tickets, squadName, squads, allSquads }: { tick
     const map = L.map(mapRef.current, { zoomControl: true }).setView([-33.393, -70.58], 14);
     mapInstance.current = map;
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20 }).addTo(map);
+    // Overlay oscuro fuera de Vitacura
+    const VITA2: [number, number][] = [
+      [-33.3726,-70.6056],[-33.3629,-70.5932],[-33.3641,-70.5773],[-33.3715,-70.5621],
+      [-33.3791,-70.5498],[-33.3873,-70.5438],[-33.3965,-70.5401],[-33.4078,-70.5456],
+      [-33.4198,-70.5601],[-33.4312,-70.5712],[-33.4356,-70.5889],[-33.4289,-70.6034],
+      [-33.4178,-70.6089],[-33.4012,-70.6112],[-33.3856,-70.6134],[-33.3726,-70.6056],
+    ];
+    L.polygon([[90,-180],[90,180],[-90,180],[-90,-180],[...VITA2].reverse()] as any, {
+      stroke: false, fillColor: '#94a3b8', fillOpacity: 0.45,
+    }).addTo(map);
+    L.polygon(VITA2, { color: '#64748b', weight: 2, opacity: 0.6, dashArray: '6 4', fill: false }).addTo(map);
     layerGroup.current = L.featureGroup().addTo(map);
     setMapReady(true);
     return () => { map.remove(); mapInstance.current = null; };

@@ -32,6 +32,8 @@ interface Ticket {
   task_summary: string | null;
   estimated_hours: number | null;
   assigned_to: string | null;
+  lat: number | null;
+  lng: number | null;
   planned_date: string;
   created_at: string;
   reported_by: string;
@@ -357,21 +359,15 @@ export function OperadorPage() {
           <LeafletMap
             markers={tickets
               .filter(t => t.status !== "Cerrado")
-              .map((t, i): MapMarker => {
-                // Distribute within Vitacura bounding box with deterministic offset from ticket id
-                const seed = (t.id * 7 + i * 13) % 100;
-                const lat = -33.388 + (seed % 20) * 0.0015 - 0.015;
-                const lng = -70.572 + (seed % 15) * 0.002 - 0.015;
-                return {
-                  id: `#${t.id}`,
-                  lat,
-                  lng,
-                  title: t.title,
-                  desc: t.area_name || t.description?.slice(0, 60) || "",
-                  urgency: t.urgency_level,
-                  status: t.status,
-                };
-              })}
+              .map((t): MapMarker => ({
+                id: `#${t.id}`,
+                lat: t.lat ?? -33.392,
+                lng: t.lng ?? -70.578,
+                title: t.title,
+                desc: t.area_name || t.description?.slice(0, 60) || "",
+                urgency: t.urgency_level,
+                status: t.status,
+              }))}
             height={500}
             center={[-33.392, -70.578]}
             zoom={14}
