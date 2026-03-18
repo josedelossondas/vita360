@@ -81,8 +81,8 @@ function createDashboardIcon(urgency: string, status: string) {
 export function LeafletMap({
   markers,
   height = 500,
-  center = [-33.392, -70.578],
-  zoom = 14,
+  center = [-33.38, -70.57],
+  zoom = 13,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);

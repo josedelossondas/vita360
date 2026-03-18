@@ -369,8 +369,8 @@ export function OperadorPage() {
                 status: t.status,
               }))}
             height={500}
-            center={[-33.392, -70.578]}
-            zoom={14}
+            center={[-33.38, -70.57]}
+            zoom={13}
           />
         </div>
       )}

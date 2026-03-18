@@ -5,6 +5,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, Ticket, Activity, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import alcaldesaImg from '../../assets/img_alcaldesa.png';
 
 const VITACURA_LOGO =
     'https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png';
@@ -116,16 +117,9 @@ function VitacuraFooter() {
                         <div className="w-14 h-14 rounded-full overflow-hidden border-2 flex-shrink-0"
                             style={{ borderColor: 'rgba(37,150,190,0.3)', boxShadow: '0 2px 10px rgba(37,150,190,0.15)' }}>
                             <img
-                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Camila_Merino_Catal%C3%A1n.jpg/220px-Camila_Merino_Catal%C3%A1n.jpg"
+                                src={alcaldesaImg}
                                 alt="Camila Merino"
                                 className="w-full h-full object-cover"
-                                onError={e => {
-                                    const el = e.target as HTMLImageElement;
-                                    el.style.display = 'none';
-                                    const parent = el.parentElement!;
-                                    parent.style.background = 'linear-gradient(135deg, rgba(37,150,190,0.15) 0%, rgba(184,44,135,0.1) 100%)';
-                                    parent.innerHTML = '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#2596be">CM</span>';
-                                }}
                             />
                         </div>
                         <div>

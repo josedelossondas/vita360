@@ -6,7 +6,9 @@ import { Dashboard } from "./pages/Dashboard";
 import { ApiMonitorPage } from "./pages/ApiMonitorPage";
 import { LayoutOperador } from "./components/LayoutOperador";
 import { LayoutJefe } from "./components/LayoutJefe";
+import { LayoutPatrullero } from "./components/LayoutPatrullero";
 import { JefeDashboard } from "./pages/JefeDashboard";
+import { PatrulleroDashboard } from "./pages/PatrulleroDashboard";
 import { useAuth } from "../context/AuthContext";
 
 function AppRedirect() {
@@ -24,6 +26,7 @@ function AppRedirect() {
   if (!user) return <Navigate to="/" replace />;
   if (user.role === "operador" || user.role === "supervisor" || user.role === "operator") return <Navigate to="/operador" replace />;
   if (user.role === "jefe_cuadrilla") return <Navigate to="/jefe-cuadrilla" replace />;
+  if (user.role === "patrullero_municipal") return <Navigate to="/patrullero-municipal" replace />;
   return <Navigate to="/ciudadano" replace />;
 }
 
@@ -51,6 +54,14 @@ function ProtectedJefeLayout() {
   return <LayoutJefe />;
 }
 
+function ProtectedPatrulleroLayout() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role !== "patrullero_municipal") return <Navigate to="/ciudadano" replace />;
+  return <LayoutPatrullero />;
+}
+
 export const router = createBrowserRouter([
   { path: "/", Component: LoginPage },
   { path: "/login", Component: LoginPage },
@@ -70,6 +81,13 @@ export const router = createBrowserRouter([
     Component: ProtectedJefeLayout,
     children: [
       { index: true, Component: JefeDashboard },
+    ],
+  },
+  {
+    path: "/patrullero-municipal",
+    Component: ProtectedPatrulleroLayout,
+    children: [
+      { index: true, Component: PatrulleroDashboard },
     ],
   },
 ]);

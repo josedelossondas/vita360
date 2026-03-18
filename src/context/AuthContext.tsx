@@ -6,7 +6,7 @@ export interface User {
   id?: number;
   name: string;
   email?: string;
-  role: 'ciudadano' | 'operador' | 'jefe_cuadrilla' | 'supervisor' | 'operator';
+  role: 'ciudadano' | 'operador' | 'jefe_cuadrilla' | 'patrullero_municipal' | 'supervisor' | 'operator';
 }
 
 interface AuthContextType {

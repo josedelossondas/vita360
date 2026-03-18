@@ -74,6 +74,34 @@ const VITACURA_LATLNG: [number, number][] = [
     [-33.40979121627189, -70.60720212276362],
 ];
 
+// ── Patrol quadrant definitions ───────────────────────────────────────────────
+const QUADRANTS: { label: string; color: string; bounds: [[number,number],[number,number]]; center: [number,number] }[] = [
+    { label: 'Cuadrante Norte', color: '#2596be', bounds: [[-33.362, -70.612], [-33.383, -70.548]], center: [-33.372, -70.580] },
+    { label: 'Cuadrante Sur',   color: '#b82c87', bounds: [[-33.383, -70.612], [-33.410, -70.548]], center: [-33.396, -70.580] },
+    { label: 'Cuadrante Este',  color: '#c0cf05', bounds: [[-33.362, -70.548], [-33.410, -70.520]], center: [-33.386, -70.534] },
+    { label: 'Cuadrante Oeste', color: '#f59e0b', bounds: [[-33.362, -70.640], [-33.410, -70.612]], center: [-33.386, -70.626] },
+];
+
+// ── Density heatmap helpers ───────────────────────────────────────────────────
+const URGENCY_WEIGHT: Record<string, number> = { Alta: 3, Media: 2, Baja: 1 };
+const GRID_SIZE = 0.005; // ~500m cells
+function densityColor(intensity: number): string {
+    // 0→blue, 0.5→yellow, 1→red
+    const t = Math.min(intensity, 1);
+    if (t < 0.5) {
+        const s = t * 2;
+        const r = Math.round(37 + s * (245 - 37));
+        const g = Math.round(150 + s * (158 - 150));
+        const b = Math.round(190 - s * (190 - 11));
+        return `rgb(${r},${g},${b})`;
+    }
+    const s = (t - 0.5) * 2;
+    const r = Math.round(245 - s * (245 - 184));
+    const g = Math.round(158 - s * (158 - 44));
+    const b = Math.round(11 + s * (135 - 11));
+    return `rgb(${r},${g},${b})`;
+}
+
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
 const statusColor = (s: string) => {
@@ -191,6 +219,7 @@ function makeCameraIcon() {
 function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedStatuses,
     selectedAreas, setSelectedAreas, mapUrgencies, setMapUrgencies,
     showTickets, setShowTickets, showCameras, setShowCameras, showVehicles, setShowVehicles,
+    showQuadrants, setShowQuadrants,
 }: {
     tickets: Ticket[]; fleetVehicles: FleetVehicle[];
     selectedStatuses: string[]; setSelectedStatuses: (fn: (prev: string[]) => string[]) => void;
@@ -199,6 +228,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
     showTickets: boolean; setShowTickets: (v: boolean) => void;
     showCameras: boolean; setShowCameras: (v: boolean) => void;
     showVehicles: boolean; setShowVehicles: (v: boolean) => void;
+    showQuadrants: boolean; setShowQuadrants: (v: boolean) => void;
 }) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<any>(null);
@@ -210,6 +240,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
     const suspectPolyline = useRef<any>(null);
     const customPolygon = useRef<any>(null);
     const heatmapLayer = useRef<any[]>([]);
+    const quadrantLayers = useRef<any[]>([]);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const allAreas = useMemo(() => Array.from(new Set(tickets.map(t => t.area_name).filter(Boolean))).sort(), [tickets]);
     const suspectVisible = fleetVehicles.some(v => v.type === 'suspect');
@@ -262,24 +293,46 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
         for (const c of heatmapLayer.current) map.removeLayer(c);
         heatmapLayer.current = [];
 
-        // Draw heatmap blobs (large semi-transparent circles) + pin markers
-        visible.forEach(t => {
-            const urgencyColor = urgencyColors[t.urgency_level] || '#2596be';
-            const statusBorder = statusColor(t.status).text;
-            const radius = t.urgency_level === 'Alta' ? 260 : t.urgency_level === 'Media' ? 190 : 140;
-            const opacity = t.urgency_level === 'Alta' ? 0.18 : t.urgency_level === 'Media' ? 0.13 : 0.09;
-
-            // Heatmap glow circle
-            const heat = L.circle([t.lat!, t.lon!], {
+        // ── Density-based heatmap ──
+        // Group tickets into grid cells and weight by urgency
+        const cellMap = new Map<string, { lat: number; lon: number; weight: number; count: number }>();
+        for (const t of visible) {
+            const gLat = Math.floor(t.lat! / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+            const gLon = Math.floor(t.lon! / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+            const key = `${gLat.toFixed(4)}_${gLon.toFixed(4)}`;
+            const w = URGENCY_WEIGHT[t.urgency_level] || 1;
+            if (cellMap.has(key)) {
+                const cell = cellMap.get(key)!;
+                cell.weight += w; cell.count += 1;
+            } else {
+                cellMap.set(key, { lat: gLat, lon: gLon, weight: w, count: 1 });
+            }
+        }
+        // Find max intensity for normalization
+        let maxIntensity = 1;
+        for (const cell of cellMap.values()) {
+            maxIntensity = Math.max(maxIntensity, cell.weight);
+        }
+        // Render density circles with gradient colors
+        for (const cell of cellMap.values()) {
+            const intensity = cell.weight / maxIntensity;
+            const color = densityColor(intensity);
+            const radius = 120 + intensity * 280;
+            const fillOpacity = 0.08 + intensity * 0.28;
+            const heat = L.circle([cell.lat, cell.lon], {
                 radius,
-                color: urgencyColor,
-                fillColor: urgencyColor,
-                fillOpacity: opacity,
+                color,
+                fillColor: color,
+                fillOpacity,
                 weight: 0,
             }).addTo(map);
             heatmapLayer.current.push(heat);
+        }
 
-            // Pin marker on top
+        // Pin markers on top
+        visible.forEach(t => {
+            const urgencyColor = urgencyColors[t.urgency_level] || '#2596be';
+            const statusBorder = statusColor(t.status).text;
             const m = L.marker([t.lat!, t.lon!], {
                 icon: L.divIcon({ html: `<div style="width:24px;height:24px;background:${urgencyColor};border-radius:50%;border:3.5px solid ${statusBorder};box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`, className: '', iconSize: [24, 24] as [number, number], iconAnchor: [12, 12] as [number, number] })
             }).bindPopup(`<div style="font-family:system-ui;font-size:13px;width:210px"><div style="font-weight:600;margin-bottom:4px">${t.title}</div><div style="color:#6B7280;font-size:12px">${t.area_name || 'Sin área'} · ${t.urgency_level || '—'}</div></div>`, { maxWidth: 240 }).addTo(map);
@@ -314,7 +367,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
     // Init Leaflet (Voyager tiles = colorful streets)
     useEffect(() => {
         if (mapInstance.current || !mapRef.current) return;
-        const map = L.map(mapRef.current).setView([-33.393, -70.58], 13);
+        const map = L.map(mapRef.current).setView([-33.38, -70.57], 13);
         mapInstance.current = map;
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -350,10 +403,34 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
                 mapInstance.current.remove(); mapInstance.current = null;
                 setIsMapReady(false);
                 fleetMarkers.current.clear(); ticketMarkers.current = []; cameraMarkers.current.clear();
-                suspectTrail.current = []; suspectPolyline.current = null; customPolygon.current = null; heatmapLayer.current = [];
+                suspectTrail.current = []; suspectPolyline.current = null; customPolygon.current = null; heatmapLayer.current = []; quadrantLayers.current = [];
             }
         };
     }, []);
+
+    // ── Quadrant zones ──
+    useEffect(() => {
+        if (!isMapReady || !mapInstance.current) return;
+        const map = mapInstance.current;
+        // Remove previous
+        for (const l of quadrantLayers.current) map.removeLayer(l);
+        quadrantLayers.current = [];
+        if (!showQuadrants) return;
+        for (const q of QUADRANTS) {
+            const [[s, w], [n, e]] = q.bounds;
+            const rect = L.rectangle([[n, w], [s, e]], {
+                color: q.color, fillColor: q.color, fillOpacity: 0.08, weight: 2, opacity: 0.55, dashArray: '8 4',
+            }).addTo(map);
+            quadrantLayers.current.push(rect);
+            const lbl = L.marker(q.center, {
+                icon: L.divIcon({
+                    html: `<div style="background:${q.color};color:white;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2)">${q.label}</div>`,
+                    className: '', iconAnchor: [55, 12] as [number,number],
+                }),
+            }).addTo(map);
+            quadrantLayers.current.push(lbl);
+        }
+    }, [showQuadrants, isMapReady]);
 
     return (
         <div className="rounded-2xl border mb-6 overflow-hidden"
@@ -376,6 +453,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
                         <Toggle label="Tickets" value={showTickets} onChange={setShowTickets} />
                         <Toggle label="Cámaras" value={showCameras} onChange={setShowCameras} />
                         <Toggle label="Vehículos" value={showVehicles} onChange={setShowVehicles} />
+                        <Toggle label="Cuadrantes" value={showQuadrants} onChange={setShowQuadrants} />
                     </div>
                 </div>
 
@@ -396,7 +474,7 @@ function MapComponent({ tickets, fleetVehicles, selectedStatuses, setSelectedSta
                 <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#f59e0b', opacity:0.7 }} />Media</span>
                 <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full inline-block" style={{ background: '#2596be', opacity:0.7 }} />Baja</span>
                 <span className="flex items-center gap-1.5"><span className="text-[14px]">📷</span>Cámara</span>
-                <span className="flex items-center gap-1.5" style={{marginLeft:'auto', fontSize:11, color:'#94a3b8'}}><span style={{width:14,height:14,borderRadius:'50%',background:'linear-gradient(135deg,#b82c87,#f59e0b,#2596be)',display:'inline-block',marginRight:4,opacity:0.6}} />Los halos muestran la densidad de incidentes</span>
+                <span className="flex items-center gap-1.5" style={{marginLeft:'auto', fontSize:11, color:'#94a3b8'}}><span style={{width:14,height:14,borderRadius:'50%',background:'linear-gradient(135deg,#2596be,#f59e0b,#b82c87)',display:'inline-block',marginRight:4,opacity:0.6}} />Densidad de incidentes</span>
             </div>
         </div>
     );
@@ -513,6 +591,7 @@ export function Dashboard() {
     const [showTickets, setShowTickets] = useState(true);
     const [showCameras, setShowCameras] = useState(true);
     const [showVehicles, setShowVehicles] = useState(true);
+    const [showQuadrants, setShowQuadrants] = useState(false);
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -633,6 +712,7 @@ export function Dashboard() {
                 showTickets={showTickets} setShowTickets={setShowTickets}
                 showCameras={showCameras} setShowCameras={setShowCameras}
                 showVehicles={showVehicles} setShowVehicles={setShowVehicles}
+                showQuadrants={showQuadrants} setShowQuadrants={setShowQuadrants}
             />
 
             {/* Tabla + detalle */}

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth, API_URL } from "../../context/AuthContext";
 import { VITChat } from "../components/VITChat";
+import alcaldesaImg from '../../assets/img_alcaldesa.png';
 
 const VITACURA_LOGO =
   "https://vitacura.cl/app/themes/vitacura-sage/public/images/logos-vitacura_sineslogan_hor.36ae38.png";
@@ -153,9 +154,9 @@ function VitacuraFooter() {
           </div>
           {/* Alcaldesa */}
           <div className="flex flex-col items-center text-center gap-2">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-bold border-2"
-              style={{ background: 'linear-gradient(135deg, rgba(37,150,190,0.15) 0%, rgba(184,44,135,0.1) 100%)', borderColor: 'rgba(37,150,190,0.2)', color: '#2596be' }}>
-              CM
+            <div className="w-14 h-14 rounded-full overflow-hidden border-2 flex-shrink-0"
+              style={{ borderColor: 'rgba(37,150,190,0.3)', boxShadow: '0 2px 10px rgba(37,150,190,0.15)' }}>
+              <img src={alcaldesaImg} alt="Camila Merino" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2596be' }}>Alcaldesa</p>

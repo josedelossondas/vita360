@@ -15,7 +15,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"ciudadano" | "operador" | "jefe_cuadrilla">("ciudadano");
+  const [role, setRole] = useState<"ciudadano" | "operador" | "jefe_cuadrilla" | "patrullero_municipal">("ciudadano");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -34,6 +34,8 @@ export function LoginPage() {
           navigate("/jefe-cuadrilla");
         } else if (userData?.role === "operador" || userData?.role === "supervisor" || userData?.role === "operator") {
           navigate("/operador");
+        } else if (userData?.role === "patrullero_municipal") {
+          navigate("/patrullero-municipal");
         } else if (userData?.role === "ciudadano") {
           navigate("/ciudadano");
         } else {
@@ -166,16 +168,16 @@ export function LoginPage() {
             {tab === "register" && (
               <div>
                 <label className="block mb-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b" }}>Tipo de Cuenta</label>
-                <div className="flex gap-2">
-                  {(["ciudadano", "operador", "jefe_cuadrilla"] as const).map((r) => (
-                    <button key={r} type="button" onClick={() => setRole(r)} className="flex-1 py-2 rounded-lg border text-xs transition-all duration-200"
+              <div className="grid grid-cols-2 gap-2">
+                  {(["ciudadano", "operador", "jefe_cuadrilla", "patrullero_municipal"] as const).map((r) => (
+                    <button key={r} type="button" onClick={() => setRole(r)} className="py-2 rounded-lg border text-xs transition-all duration-200"
                       style={{
                         borderColor: role === r ? "#2596be" : "rgba(37,150,190,0.15)",
                         background: role === r ? "rgba(37,150,190,0.1)" : "rgba(255,255,255,0.6)",
                         color: role === r ? "#2596be" : "#64748b",
                         fontWeight: role === r ? 600 : 400,
                       }}>
-                      {r === "ciudadano" ? "Ciudadano" : r === "operador" ? "Operador Muni" : "Jefe Cuadrilla"}
+                      {r === "ciudadano" ? "Ciudadano" : r === "operador" ? "Operador Muni" : r === "jefe_cuadrilla" ? "Jefe Cuadrilla" : "Patrullero"}
                     </button>
                   ))}
                 </div>

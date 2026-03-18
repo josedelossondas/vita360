@@ -118,7 +118,7 @@ function PatrolDashboard({ tickets, squadName, squads }: { tickets: Ticket[]; sq
   // Init map
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
-    const map = L.map(mapRef.current).setView(quadrant?.center || [-33.393, -70.58], 14);
+    const map = L.map(mapRef.current).setView(quadrant?.center || [-33.38, -70.57], 13);
     mapInstance.current = map;
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20,
@@ -373,7 +373,7 @@ function RegularSquadDashboard({ tickets, squadName, squads, allSquads }: { tick
 
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
-    const map = L.map(mapRef.current, { zoomControl: true }).setView([-33.393, -70.58], 14);
+    const map = L.map(mapRef.current, { zoomControl: true }).setView([-33.38, -70.57], 13);
     mapInstance.current = map;
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© CARTO', subdomains: 'abcd', maxZoom: 20 }).addTo(map);
     // Overlay oscuro fuera de Vitacura
